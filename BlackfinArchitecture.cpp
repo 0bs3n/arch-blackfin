@@ -367,6 +367,7 @@ bool BlackfinArchitecture::GetInstructionText(const uint8_t *data, uint64_t addr
     MYLOG("instr operation op count: %d", instr.operand_count);
     MYLOG("instr opcode: %x", instr.opcode);
 
+    len = instr.length;
     if (instr.operation == blackfin::OP_ILLEGAL) {
         result.emplace_back(TextToken, "ILLEGAL");
         return true;
@@ -377,7 +378,6 @@ bool BlackfinArchitecture::GetInstructionText(const uint8_t *data, uint64_t addr
         return true;
     }
 
-    len = instr.length;
     for (int i = 0; i < instr.operand_count; i++) {
         blackfin::InstructionOperand operand = instr.operands[i];
         MYLOG("operand type: %d", operand.cls);
