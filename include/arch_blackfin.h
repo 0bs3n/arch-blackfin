@@ -297,6 +297,8 @@ enum Operation {
     OP_DSPMAC,
     OP_DSPMUL,
     OP_DSPALU,
+    OP_RAISE,
+    OP_EXCPT,
 
     OP_UNSUPPORTED,
     OP_ILLEGAL

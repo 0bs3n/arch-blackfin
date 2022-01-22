@@ -1,9 +1,15 @@
 #include "ProgCtrl.h"
 
 bool ProgCtrlInstruction::Disassemble(uint16_t instructionWord, struct blackfin::Instruction &instr, bool parallel) {
+	/* ProgCtrl
+	+---+---+---+---|---+---+---+---|---+---+---+---|---+---+---+---+
+	| 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |.prgfunc.......|.poprnd........|
+	+---+---+---+---|---+---+---+---|---+---+---+---|---+---+---+---+  */
+    
     int poprnd  = ((instructionWord >> ProgCtrl_poprnd_bits) & ProgCtrl_poprnd_mask);
     int prgfunc = ((instructionWord >> ProgCtrl_prgfunc_bits) & ProgCtrl_prgfunc_mask);
     ProgCtrlOps operation;
+
     if (prgfunc == PCNOP && parallel) return PCILLEGAL;
 
     switch (prgfunc) {
@@ -152,9 +158,11 @@ bool ProgCtrlInstruction::Disassemble(uint16_t instructionWord, struct blackfin:
         switch (prgfunc) {
         case 10:
             instr.operands[0].mnemonic = blackfin::OL_RAISE;
+            instr.operation = blackfin::OP_RAISE;
             return true;
         case 11:
             instr.operands[0].mnemonic = blackfin::OL_EXCPT;
+            instr.operation = blackfin::OP_EXCPT;
             return true;
         default:
             return false;
