@@ -3,6 +3,10 @@
 
 bool Logic2OpInstruction::Disassemble(uint16_t instructionWord, struct blackfin::Instruction &instr, bool parallel)
 {
+	/* LOGI2op
+	+---+---+---+---|---+---+---+---|---+---+---+---|---+---+---+---+
+	| 0 | 1 | 0 | 0 | 1 |.opc.......|.src...............|.dst.......|
+	+---+---+---+---|---+---+---+---|---+---+---+---|---+---+---+---+  */
 	int src = ((instructionWord >> LOGI2op_src_bits) & LOGI2op_src_mask);
 	int opc = ((instructionWord >> LOGI2op_opc_bits) & LOGI2op_opc_mask);
 	int dst = ((instructionWord >> LOGI2op_dst_bits) & LOGI2op_dst_mask);
@@ -52,10 +56,11 @@ bool Logic2OpInstruction::Disassemble(uint16_t instructionWord, struct blackfin:
         } else if (opc == 6) {
             instr.operation = blackfin::OP_MVSHIFTED;
             instr.operands[1].operat = blackfin::OPER_LSHIFTREQ;
-        } else if (opc == 6) {
+        } else if (opc == 7) {
             instr.operation = blackfin::OP_MVSHIFTED;
             instr.operands[1].operat = blackfin::OPER_LSHIFTLEQ;
         }
+        return true;
     }
     return true;
 }
