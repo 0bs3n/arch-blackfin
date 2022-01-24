@@ -17,10 +17,6 @@ LdImmHwInstruction::Disassemble(uint16_t instructionWordHigh, uint16_t instructi
     instr.operands[1].cls = blackfin::OPERATOR;
     instr.operands[1].operat = blackfin::OPER_EQ;
 
-    BinaryNinja::LogInfo("hword: %08x", hword);
-    BinaryNinja::LogInfo("iw0: %08x", instructionWordHigh);
-    BinaryNinja::LogInfo("iw1: %08x", instructionWordLow);
-
     if (!Z && !S) {
         instr.operands[2].cls = blackfin::UIMM;
         instr.operands[2].uimm = uimm16(hword);

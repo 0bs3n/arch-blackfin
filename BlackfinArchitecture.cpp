@@ -2,7 +2,7 @@
 #include "binaryninjaapi.h"
 #include "binaryninjacore.h"
 #include "lowlevelilinstruction.h"
-#include "include/arch_blackfin.h"
+#include "arch_blackfin.h"
 #include "Disassembler.h"
 #include <string.h>
 

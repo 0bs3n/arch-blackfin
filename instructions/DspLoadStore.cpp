@@ -31,7 +31,6 @@ DspLoadStoreInstruction::Disassemble(uint16_t instructionWord, struct blackfin::
 
     blackfin::InstructionOperand ireg_operand = { .cls = blackfin::REG, .reg = iregs(i) };
 
-    printf("in DspLoadStoreInstruction()\n");
     if (aop == 3) {
         dreg_operand = { .cls = blackfin::REG, .reg = dregs(reg) };
         ireg = iregs(i);
