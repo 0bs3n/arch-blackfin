@@ -500,7 +500,13 @@ bool BlackfinArchitecture::GetInstructionText(const uint8_t *data, uint64_t addr
         if (operand.flags.sign_extended) result.emplace_back(TextToken, " (X)");
         if (operand.flags.zero_extended) result.emplace_back(TextToken, " (Z)");
     }
-
+    if ((instr.operation == blackfin::OP_DSPALU || 
+        instr.operation == blackfin::OP_DSPMAC || 
+        instr.operation == blackfin::OP_DSPMUL ||
+        instr.operation == blackfin::OP_DSPSHIFT ||
+        instr.operation == blackfin::OP_DSPSHIFTIMM)) {
+        result.emplace_back(TextToken, " {DSP OP}");
+    }
     /*
     if (instr.operation == blackfin::OP_MOVIMM) {
         result.emplace_back(RegisterToken, GetRegisterName(instr.operands[0].reg));

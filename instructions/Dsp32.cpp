@@ -249,19 +249,21 @@ void amod0amod2 (int s0, int x0, int aop0, struct blackfin::Instruction &instr)
     }
 }
 
-/*
 void searchmod (int r0, struct blackfin::Instruction &instr)
 {
-	if (r0 == 0)
-		OUTS (outf, "GT");
-	else if (r0 == 1)
-		OUTS (outf, "GE");
-	else if (r0 == 2)
-		OUTS (outf, "LT");
-	else if (r0 == 3)
-		OUTS (outf, "LE");
+	if (r0 == 0) {
+        instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_GT };
+    }
+	else if (r0 == 1) {
+        instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_GE };
+    }
+	else if (r0 == 2) {
+        instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_LT };
+    }
+	else if (r0 == 3) {
+        instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_LE };
+    }
 }
-*/
 
 void aligndir (int r0, struct blackfin::Instruction &instr)
 {

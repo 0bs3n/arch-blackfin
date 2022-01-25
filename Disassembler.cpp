@@ -202,19 +202,19 @@ static int _disasm_insn_bfin(uint32_t instructionCandidate, uint32_t addr, black
         result.opcode = (iw0 << 16) + iw1;
         result.length = 4;
         result.operation = blackfin::OP_UNSUPPORTED;
-		// rv = decode_dsp32alu_0 (iw0, iw1, outf);
+        Dsp32ALUInstruction::Disassemble(iw0, iw1, result, parallel);
     }
 	else if ((iw0 & 0xf780) == 0xc600 && (iw1 & 0x01c0) == 0x0000) {
         result.opcode = (iw0 << 16) + iw1;
         result.length = 4;
         result.operation = blackfin::OP_UNSUPPORTED;
-		// rv = decode_dsp32shift_0 (iw0, iw1, outf);
+        Dsp32ShiftInstruction::Disassemble(iw0, iw1, result, parallel);
     }
 	else if ((iw0 & 0xf780) == 0xc680 && (iw1 & 0x0000) == 0x0000) {
         result.opcode = (iw0 << 16) + iw1;
         result.length = 4;
         result.operation = blackfin::OP_UNSUPPORTED;
-		// rv = decode_dsp32shiftimm_0 (iw0, iw1, outf);
+        Dsp32ShiftImmInstruction::Disassemble(iw0, iw1, result, parallel);
     }
 	else if ((iw0 & 0xff00) == 0xf800) {
         result.opcode = iw0;

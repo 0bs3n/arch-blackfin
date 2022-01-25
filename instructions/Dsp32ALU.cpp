@@ -12,7 +12,6 @@ Dsp32ALUInstruction::Disassemble(uint16_t instructionWordHigh, uint16_t instruct
 	| 1 | 1 | 0 | 0 |.M.| 1 | 0 | - | - | - |.HL|.aopcde............|
 	|.aop...|.s.|.x.|.dst0......|.dst1......|.src0......|.src1......|
 	+---+---+---+---|---+---+---+---|---+---+---+---|---+---+---+---+  */
-    /*
 	int s    = ((instructionWordLow >> DSP32Alu_s_bits) & DSP32Alu_s_mask);
 	int x    = ((instructionWordLow >> DSP32Alu_x_bits) & DSP32Alu_x_mask);
 	int aop  = ((instructionWordLow >> DSP32Alu_aop_bits) & DSP32Alu_aop_mask);
@@ -329,489 +328,668 @@ Dsp32ALUInstruction::Disassemble(uint16_t instructionWordHigh, uint16_t instruct
 	}
 	else if (aop == 0 && aopcde == 22 && HL == 1)
 	{
-		OUTS (outf, dregs (dst0));
-		OUTS (outf, " = BYTEOP2P (");
-		OUTS (outf, dregs (src0 + 1));
-		OUTS (outf, ":");
-		OUTS (outf, imm5d (src0));
-		OUTS (outf, ", ");
-		OUTS (outf, dregs (src1 + 1));
-		OUTS (outf, ":");
-		OUTS (outf, imm5d (src1));
-		OUTS (outf, ") (RNDH");
-		if (s == 1)
-			OUTS (outf, ", R)");
-		else
-			OUTS (outf, ")");
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_BYTEOP2P };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_OPENP };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src0 + 1) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_COLON };
+        instr.operands[instr.operand_count++] = { .cls = IMM, .imm = imm5(src0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_COMMA };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src1 + 1) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_COLON };
+        instr.operands[instr.operand_count++] = { .cls = IMM, .imm = imm5(src1) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_CLOSEP };
+        instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_RNDHMOD };
+        instr.flags.RNDH = true;
+		if (s == 1) {
+            instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_RMOD };
+            instr.flags.R = true;
+        }
 	}
 	else if (aop == 0 && aopcde == 22 && HL == 0)
 	{
-		OUTS (outf, dregs (dst0));
-		OUTS (outf, " = BYTEOP2P (");
-		OUTS (outf, dregs (src0 + 1));
-		OUTS (outf, ":");
-		OUTS (outf, imm5d (src0));
-		OUTS (outf, ", ");
-		OUTS (outf, dregs (src1 + 1));
-		OUTS (outf, ":");
-		OUTS (outf, imm5d (src1));
-		OUTS (outf, ") (RNDL");
-		if (s == 1)
-			OUTS (outf, ", R)");
-		else
-			OUTS (outf, ")");
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_BYTEOP2P };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_OPENP };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src0 + 1) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_COLON };
+        instr.operands[instr.operand_count++] = { .cls = IMM, .imm = imm5(src0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_COMMA };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src1 + 1) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_COLON };
+        instr.operands[instr.operand_count++] = { .cls = IMM, .imm = imm5(src1) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_CLOSEP };
+        instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_RNDLMOD };
+        instr.flags.RNDL = true;
+		if (s == 1) {
+            instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_RMOD };
+            instr.flags.R = true;
+        }
 	}
-	else if (aop == 0 && s == 0 && aopcde == 8)
-		OUTS (outf, "A0 = 0");
-	else if (aop == 0 && s == 1 && aopcde == 8)
-		OUTS (outf, "A0 = A0 (S)");
-	else if (aop == 1 && s == 0 && aopcde == 8)
-		OUTS (outf, "A1 = 0");
-	else if (aop == 1 && s == 1 && aopcde == 8)
-		OUTS (outf, "A1 = A1 (S)");
-	else if (aop == 2 && s == 0 && aopcde == 8)
-		OUTS (outf, "A1 = A0 = 0");
-	else if (aop == 2 && s == 1 && aopcde == 8)
-		OUTS (outf, "A1 = A1 (S), A0 = A0 (S)");
-	else if (aop == 3 && s == 0 && aopcde == 8)
-		OUTS (outf, "A0 = A1");
-	else if (aop == 3 && s == 1 && aopcde == 8)
-		OUTS (outf, "A1 = A0");
+	else if (aop == 0 && s == 0 && aopcde == 8) {
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A0 };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = IMM, .imm = 0 };
+    }
+	else if (aop == 0 && s == 1 && aopcde == 8) {
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A0 };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A0 };
+        instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_SMOD };
+    }
+	else if (aop == 1 && s == 0 && aopcde == 8) {
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A1 };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = IMM, .imm = 0 };
+    }
+	else if (aop == 1 && s == 1 && aopcde == 8) {
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A1 };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A1 };
+        instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_SMOD };
+    }
+	else if (aop == 2 && s == 0 && aopcde == 8) {
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A0 };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = IMM, .imm = 0 };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_COMMA };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A1 };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = IMM, .imm = 0 };
+    }
+	else if (aop == 2 && s == 1 && aopcde == 8) {
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A1 };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A1 };
+        instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_SMOD };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_COMMA };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A0 };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A0 };
+        instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_SMOD };
+    }
+	else if (aop == 3 && s == 0 && aopcde == 8) {
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A0 };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A1 };
+    }
+	else if (aop == 3 && s == 1 && aopcde == 8) {
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A1 };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A0 };
+    }
 	else if (aop == 1 && aopcde == 9 && s == 0)
 	{
-		OUTS (outf, "A0.X = ");
-		OUTS (outf, dregs_lo (src0));
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A1x };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs_lo(src0) };
 	}
 	else if (aop == 1 && HL == 0 && aopcde == 11)
 	{
-		OUTS (outf, dregs_lo (dst0));
-		OUTS (outf, " = (A0 += A1)");
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs_lo(dst0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A0 };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_PLUSEQ };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A1 };
 	}
-	else if (aop == 3 && HL == 0 && aopcde == 16)
-		OUTS (outf, "A1 = ABS A1, A0 = ABS A0");
+	else if (aop == 3 && HL == 0 && aopcde == 16) {
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A1 };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_ABS };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A1 };
+
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_COMMA };
+
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A0 };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_ABS };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A0 };
+    }
 	else if (aop == 0 && aopcde == 23 && HL == 1)
 	{
-		OUTS (outf, dregs (dst0));
-		OUTS (outf, " = BYTEOP3P (");
-		OUTS (outf, dregs (src0 + 1));
-		OUTS (outf, ":");
-		OUTS (outf, imm5d (src0));
-		OUTS (outf, ", ");
-		OUTS (outf, dregs (src1 + 1));
-		OUTS (outf, ":");
-		OUTS (outf, imm5d (src1));
-		OUTS (outf, ") (HI");
-
-		if (s == 1)
-			OUTS (outf, ", R)");
-		else
-			OUTS (outf, ")");
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_BYTEOP2P };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_OPENP };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src0 + 1) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_COLON };
+        instr.operands[instr.operand_count++] = { .cls = IMM, .imm = imm5(src0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_COMMA };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src1 + 1) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_COLON };
+        instr.operands[instr.operand_count++] = { .cls = IMM, .imm = imm5(src1) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_CLOSEP };
+        instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_HIMOD };
+        instr.flags.HI = true;
+		if (s == 1) {
+            instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_RMOD };
+            instr.flags.R = true;
+        }
 	}
 	else if (aop == 3 && aopcde == 9 && s == 0)
 	{
-		OUTS (outf, "A1.X = ");
-		OUTS (outf, dregs_lo (src0));
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A1x };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs_lo(src0) };
 	}
-	else if (aop == 1 && HL == 1 && aopcde == 16)
-		OUTS (outf, "A1 = ABS A1");
-	else if (aop == 0 && HL == 1 && aopcde == 16)
-		OUTS (outf, "A1 = ABS A0");
+	else if (aop == 1 && HL == 1 && aopcde == 16) {
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A1 };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_ABS };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A1 };
+    }
+	else if (aop == 0 && HL == 1 && aopcde == 16) {
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A1 };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_ABS };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A0 };
+    }
 	else if (aop == 2 && aopcde == 9 && s == 1)
 	{
-		OUTS (outf, "A1 = ");
-		OUTS (outf, dregs (src0));
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A1 };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src0) };
 	}
 	else if (HL == 0 && aop == 3 && aopcde == 12)
 	{
-		OUTS (outf, dregs_lo (dst0));
-		OUTS (outf, " = ");
-		OUTS (outf, dregs (src0));
-		OUTS (outf, " (RND)");
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs_lo(dst0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src0) };
+        instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_RNDMOD };
+        instr.flags.RND = true;
 	}
-	else if (aop == 1 && HL == 0 && aopcde == 16)
-		OUTS (outf, "A0 = ABS A1");
-	else if (aop == 0 && HL == 0 && aopcde == 16)
-		OUTS (outf, "A0 = ABS A0");
+	else if (aop == 1 && HL == 0 && aopcde == 16) {
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A0 };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_ABS };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A1 };
+    }
+	else if (aop == 0 && HL == 0 && aopcde == 16) {
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A0 };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_ABS };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A0 };
+    }
 	else if (aop == 3 && HL == 0 && aopcde == 15)
 	{
-		OUTS (outf, dregs (dst0));
-		OUTS (outf, " = -");
-		OUTS (outf, dregs (src0));
-		OUTS (outf, " (V)");
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQNEG };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src0) };
+        instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_VMOD };
+        instr.flags.V = true;
 	}
 	else if (aop == 3 && s == 1 && HL == 0 && aopcde == 7)
 	{
-		OUTS (outf, dregs (dst0));
-		OUTS (outf, " = -");
-		OUTS (outf, dregs (src0));
-		OUTS (outf, " (S)");
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQNEG };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src0) };
+        instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_SMOD };
+        instr.flags.S = true;
 	}
 	else if (aop == 3 && s == 0 && HL == 0 && aopcde == 7)
 	{
-		OUTS (outf, dregs (dst0));
-		OUTS (outf, " = -");
-		OUTS (outf, dregs (src0));
-		OUTS (outf, " (NS)");
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQNEG };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src0) };
+        instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_NSMOD };
+        instr.flags.NS = true;
 	}
 	else if (aop == 1 && HL == 1 && aopcde == 11)
 	{
-		OUTS (outf, dregs_hi (dst0));
-		OUTS (outf, " = (A0 += A1)");
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs_hi(dst0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A0 };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_PLUSEQ };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A1 };
 	}
-	else if (aop == 2 && aopcde == 11 && s == 0)
-		OUTS (outf, "A0 += A1");
-	else if (aop == 2 && aopcde == 11 && s == 1)
-		OUTS (outf, "A0 += A1 (W32)");
-	else if (aop == 3 && HL == 0 && aopcde == 14)
-		OUTS (outf, "A1 = -A1, A0 = -A0");
+	else if (aop == 2 && aopcde == 11 && s == 0) {
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A0 };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_PLUSEQ };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A1 };
+    }
+	else if (aop == 2 && aopcde == 11 && s == 1) {
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A0 };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_PLUSEQ };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A1 };
+        instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_W32FLAG };
+        instr.flags.W32 = true;
+    }
+	else if (aop == 3 && HL == 0 && aopcde == 14) {
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A1 };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQNEG };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A1 };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_COMMA };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A0 };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQNEG };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A0 };
+    }
 	else if (HL == 1 && aop == 3 && aopcde == 12)
 	{
-		OUTS (outf, dregs_hi (dst0));
-		OUTS (outf, " = ");
-		OUTS (outf, dregs (src0));
-		OUTS (outf, " (RND)");
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs_hi(dst0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src0) };
+        instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_RNDMOD };
+        instr.flags.RND = true;
 	}
 	else if (aop == 0 && aopcde == 23 && HL == 0)
 	{
-		OUTS (outf, dregs (dst0));
-		OUTS (outf, " = BYTEOP3P (");
-		OUTS (outf, dregs (src0 + 1));
-		OUTS (outf, ":");
-		OUTS (outf, imm5d (src0));
-		OUTS (outf, ", ");
-		OUTS (outf, dregs (src1 + 1));
-		OUTS (outf, ":");
-		OUTS (outf, imm5d (src1));
-		OUTS (outf, ") (LO");
-		if (s == 1)
-			OUTS (outf, ", R)");
-		else
-			OUTS (outf, ")");
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_BYTEOP3P };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_OPENP };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src0 + 1) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_COLON };
+        instr.operands[instr.operand_count++] = { .cls = IMM, .imm = imm5(src0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_COMMA };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src1 + 1) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_COLON };
+        instr.operands[instr.operand_count++] = { .cls = IMM, .imm = imm5(src1) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_CLOSEP };
+        instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_LOMOD };
+        instr.flags.LO = true;
+		if (s == 1) {
+            instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_RMOD };
+            instr.flags.R = true;
+        }
 	}
-	else if (aop == 0 && HL == 0 && aopcde == 14)
-		OUTS (outf, "A0 = -A0");
-	else if (aop == 1 && HL == 0 && aopcde == 14)
-		OUTS (outf, "A0 = -A1");
-	else if (aop == 0 && HL == 1 && aopcde == 14)
-		OUTS (outf, "A1 = -A0");
-	else if (aop == 1 && HL == 1 && aopcde == 14)
-		OUTS (outf, "A1 = -A1");
+	else if (aop == 0 && HL == 0 && aopcde == 14) {
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A0 };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQNEG };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A0 };
+    }
+	else if (aop == 1 && HL == 0 && aopcde == 14) {
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A0 };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQNEG };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A1 };
+
+    }
+	else if (aop == 0 && HL == 1 && aopcde == 14) {
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A1 };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQNEG };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A0 };
+    }
+	else if (aop == 1 && HL == 1 && aopcde == 14) {
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A1 };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQNEG };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A1 };
+    }
 	else if (aop == 0 && aopcde == 12)
 	{
-		OUTS (outf, dregs_hi (dst0));
-		OUTS (outf, " = ");
-		OUTS (outf, dregs_lo (dst0));
-		OUTS (outf, " = SIGN (");
-		OUTS (outf, dregs_hi (src0));
-		OUTS (outf, ") * ");
-		OUTS (outf, dregs_hi (src1));
-		OUTS (outf, " + SIGN (");
-		OUTS (outf, dregs_lo (src0));
-		OUTS (outf, ") * ");
-		OUTS (outf, dregs_lo (src1));
+        // dreg_hi = dreg_lo = SIGN (dreg_hi) * dreg_hi + SIGN (dreg_lo) * dreg_lo
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs_hi(dst0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs_lo(dst0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic =  OL_SIGN };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_OPENP };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs_hi(src0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_CLOSEP };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_MUL };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs_hi(src1) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_PLUS };
+        instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic =  OL_SIGN };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_OPENP };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs_lo(src0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_CLOSEP };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_MUL };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs_lo(src1) };
 	}
 	else if (aop == 2 && aopcde == 0)
 	{
-		OUTS (outf, dregs (dst0));
-		OUTS (outf, " = ");
-		OUTS (outf, dregs (src0));
-		OUTS (outf, " -|+ ");
-		OUTS (outf, dregs (src1));
-		amod0 (s, x, outf);
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_MINUSORPLUS };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src1) };
+		amod0 (s, x, instr);
 	}
 	else if (aop == 1 && aopcde == 12)
 	{
-		OUTS (outf, dregs (dst1));
-		OUTS (outf, " = A1.L + A1.H, ");
-		OUTS (outf, dregs (dst0));
-		OUTS (outf, " = A0.L + A0.H");
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst1) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A1L };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_PLUS };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A1H };
+
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_COMMA };
+
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A0L };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_PLUS };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A0H };
 	}
 	else if (aop == 2 && aopcde == 4)
 	{
-		OUTS (outf, dregs (dst1));
-		OUTS (outf, " = ");
-		OUTS (outf, dregs (src0));
-		OUTS (outf, " + ");
-		OUTS (outf, dregs (src1));
-		OUTS (outf, ", ");
-		OUTS (outf, dregs (dst0));
-		OUTS (outf, " = ");
-		OUTS (outf, dregs (src0));
-		OUTS (outf, " - ");
-		OUTS (outf, dregs (src1));
-		amod1 (s, x, outf);
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst1) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_PLUS };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src1) };
+
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_COMMA };
+
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_PLUS };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src1) };
+		amod1 (s, x, instr);
 	}
 	else if (HL == 0 && aopcde == 1)
 	{
-		OUTS (outf, dregs (dst1));
-		OUTS (outf, " = ");
-		OUTS (outf, dregs (src0));
-		OUTS (outf, " +|+ ");
-		OUTS (outf, dregs (src1));
-		OUTS (outf, ", ");
-		OUTS (outf, dregs (dst0));
-		OUTS (outf, " = ");
-		OUTS (outf, dregs (src0));
-		OUTS (outf, " -|- ");
-		OUTS (outf, dregs (src1));
-		amod0amod2 (s, x, aop, outf);
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst1) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_PLUSORPLUS };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src1) };
+
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_COMMA };
+
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_MINUSORMINUS };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src1) };
+		amod0amod2 (s, x, aop, instr);
 	}
 	else if (aop == 0 && aopcde == 11)
 	{
-		OUTS (outf, dregs (dst0));
-		OUTS (outf, " = (A0 += A1)");
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_OPENP };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A0 };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_PLUSEQ };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A1 };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_CLOSEP };
 	}
 	else if (aop == 0 && aopcde == 10)
 	{
-		OUTS (outf, dregs_lo (dst0));
-		OUTS (outf, " = A0.X");
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs_lo(dst0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A0x };
 	}
 	else if (aop == 1 && aopcde == 10)
 	{
-		OUTS (outf, dregs_lo (dst0));
-		OUTS (outf, " = A1.X");
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs_lo(dst0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A1x };
 	}
 	else if (aop == 1 && aopcde == 0)
 	{
-		OUTS (outf, dregs (dst0));
-		OUTS (outf, " = ");
-		OUTS (outf, dregs (src0));
-		OUTS (outf, " +|- ");
-		OUTS (outf, dregs (src1));
-		amod0 (s, x, outf);
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_PLUSORMINUS };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src1) };
+		amod0 (s, x, instr);
 	}
 	else if (aop == 3 && aopcde == 0)
 	{
-		OUTS (outf, dregs (dst0));
-		OUTS (outf, " = ");
-		OUTS (outf, dregs (src0));
-		OUTS (outf, " -|- ");
-		OUTS (outf, dregs (src1));
-		amod0 (s, x, outf);
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_MINUSORMINUS };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src1) };
+		amod0 (s, x, instr);
 	}
 	else if (aop == 1 && aopcde == 4)
 	{
-		OUTS (outf, dregs (dst0));
-		OUTS (outf, " = ");
-		OUTS (outf, dregs (src0));
-		OUTS (outf, " - ");
-		OUTS (outf, dregs (src1));
-		amod1 (s, x, outf);
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_MINUS };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src1) };
+		amod1 (s, x, instr);
 	}
 	else if (aop == 0 && aopcde == 17)
 	{
-		OUTS (outf, dregs (dst1));
-		OUTS (outf, " = A1 + A0, ");
-		OUTS (outf, dregs (dst0));
-		OUTS (outf, " = A1 - A0");
-		amod1 (s, x, outf);
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst1) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A1 };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_PLUS };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A0 };
+
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_COMMA };
+
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A1 };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_MINUS };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A0 };
+		amod1 (s, x, instr);
 	}
 	else if (aop == 1 && aopcde == 17)
 	{
-		OUTS (outf, dregs (dst1));
-		OUTS (outf, " = A0 + A1, ");
-		OUTS (outf, dregs (dst0));
-		OUTS (outf, " = A0 - A1");
-		amod1 (s, x, outf);
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst1) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A0 };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_PLUS };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A1 };
+
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_COMMA };
+
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A0 };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_MINUS };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = REG_A1 };
+		amod1 (s, x, instr);
 	}
 	else if (aop == 0 && aopcde == 18)
 	{
-		OUTS (outf, "SAA (");
-		OUTS (outf, dregs (src0 + 1));
-		OUTS (outf, ":");
-		OUTS (outf, imm5d (src0));
-		OUTS (outf, ", ");
-		OUTS (outf, dregs (src1 + 1));
-		OUTS (outf, ":");
-		OUTS (outf, imm5d (src1));
-		OUTS (outf, ")");
-		aligndir (s, outf);
+        instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_SAA };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src0 + 1) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_COLON };
+        instr.operands[instr.operand_count++] = { .cls = IMM, .imm = imm5(src0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_COMMA };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src1 + 1) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_COLON };
+        instr.operands[instr.operand_count++] = { .cls = IMM, .imm = imm5(src1) };
+		aligndir (s, instr);
 	}
-	else if (aop == 3 && aopcde == 18)
-		OUTS (outf, "DISALGNEXCPT");
+	else if (aop == 3 && aopcde == 18) {
+        instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_DISALGNEXCPT };
+    }
 	else if (aop == 0 && aopcde == 20)
 	{
-		OUTS (outf, dregs (dst0));
-		OUTS (outf, " = BYTEOP1P (");
-		OUTS (outf, dregs (src0 + 1));
-		OUTS (outf, ":");
-		OUTS (outf, imm5d (src0));
-		OUTS (outf, ", ");
-		OUTS (outf, dregs (src1 + 1));
-		OUTS (outf, ":");
-		OUTS (outf, imm5d (src1));
-		OUTS (outf, ")");
-		aligndir (s, outf);
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_BYTEOP1P };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_OPENP };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src0 + 1) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_COLON };
+        instr.operands[instr.operand_count++] = { .cls = IMM, .imm = imm5(src0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_COMMA };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src1 + 1) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_COLON };
+        instr.operands[instr.operand_count++] = { .cls = IMM, .imm = imm5(src1) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_CLOSEP };
+		aligndir (s, instr);
 	}
 	else if (aop == 1 && aopcde == 20)
 	{
-		OUTS (outf, dregs (dst0));
-		OUTS (outf, " = BYTEOP1P (");
-		OUTS (outf, dregs (src0 + 1));
-		OUTS (outf, ":");
-		OUTS (outf, imm5d (src0));
-		OUTS (outf, ", ");
-		OUTS (outf, dregs (src1 + 1));
-		OUTS (outf, ":");
-		OUTS (outf, imm5d (src1));
-		OUTS (outf, ") (T");
-		if (s == 1)
-			OUTS (outf, ", R)");
-		else
-			OUTS (outf, ")");
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_BYTEOP1P };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_OPENP };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src0 + 1) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_COLON };
+        instr.operands[instr.operand_count++] = { .cls = IMM, .imm = imm5(src0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_COMMA };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src1 + 1) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_COLON };
+        instr.operands[instr.operand_count++] = { .cls = IMM, .imm = imm5(src1) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_CLOSEP };
+        instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_TMOD };
+        instr.flags.T = true;
+        if (s) {
+            instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_RMOD };
+            instr.flags.R = true;
+        }
 	}
 	else if (aop == 0 && aopcde == 21)
 	{
-		OUTS (outf, "(");
-		OUTS (outf, dregs (dst1));
-		OUTS (outf, ", ");
-		OUTS (outf, dregs (dst0));
-		OUTS (outf, ") = BYTEOP16P (");
-		OUTS (outf, dregs (src0 + 1));
-		OUTS (outf, ":");
-		OUTS (outf, imm5d (src0));
-		OUTS (outf, ", ");
-		OUTS (outf, dregs (src1 + 1));
-		OUTS (outf, ":");
-		OUTS (outf, imm5d (src1));
-		OUTS (outf, ")");
-		aligndir (s, outf);
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst1) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_COMMA };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_BYTEOP16P };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src0 + 1) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_COLON };
+        instr.operands[instr.operand_count++] = { .cls = IMM, .imm = imm5(src0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_COMMA };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src1 + 1) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_COLON };
+        instr.operands[instr.operand_count++] = { .cls = IMM, .imm = imm5(src1) };
+		aligndir (s, instr);
 	}
 	else if (aop == 1 && aopcde == 21)
 	{
-		OUTS (outf, "(");
-		OUTS (outf, dregs (dst1));
-		OUTS (outf, ", ");
-		OUTS (outf, dregs (dst0));
-		OUTS (outf, ") = BYTEOP16M (");
-		OUTS (outf, dregs (src0 + 1));
-		OUTS (outf, ":");
-		OUTS (outf, imm5d (src0));
-		OUTS (outf, ", ");
-		OUTS (outf, dregs (src1 + 1));
-		OUTS (outf, ":");
-		OUTS (outf, imm5d (src1));
-		OUTS (outf, ")");
-		aligndir (s, outf);
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst1) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_COMMA };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_BYTEOP16M };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src0 + 1) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_COLON };
+        instr.operands[instr.operand_count++] = { .cls = IMM, .imm = imm5(src0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_COMMA };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src1 + 1) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_COLON };
+        instr.operands[instr.operand_count++] = { .cls = IMM, .imm = imm5(src1) };
+		aligndir (s, instr);
 	}
 	else if (aop == 2 && aopcde == 7)
 	{
-		OUTS (outf, dregs (dst0));
-		OUTS (outf, " = ABS ");
-		OUTS (outf, dregs (src0));
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_ABS };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src0) };
 	}
 	else if (aop == 1 && aopcde == 7)
 	{
-		OUTS (outf, dregs (dst0));
-		OUTS (outf, " = MIN (");
-		OUTS (outf, dregs (src0));
-		OUTS (outf, ", ");
-		OUTS (outf, dregs (src1));
-		OUTS (outf, ")");
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_MIN };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_COMMA };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src1) };
 	}
 	else if (aop == 0 && aopcde == 7)
 	{
-		OUTS (outf, dregs (dst0));
-		OUTS (outf, " = MAX (");
-		OUTS (outf, dregs (src0));
-		OUTS (outf, ", ");
-		OUTS (outf, dregs (src1));
-		OUTS (outf, ")");
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_MAX };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_COMMA };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src1) };
 	}
 	else if (aop == 2 && aopcde == 6)
 	{
-		OUTS (outf, dregs (dst0));
-		OUTS (outf, " = ABS ");
-		OUTS (outf, dregs (src0));
-		OUTS (outf, " (V)");
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_ABS };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src0) };
+        instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_VMOD };
+        instr.flags.V = true;
 	}
 	else if (aop == 1 && aopcde == 6)
 	{
-		OUTS (outf, dregs (dst0));
-		OUTS (outf, " = MIN (");
-		OUTS (outf, dregs (src0));
-		OUTS (outf, ", ");
-		OUTS (outf, dregs (src1));
-		OUTS (outf, ") (V)");
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_MIN };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_COMMA };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src1) };
+        instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_VMOD };
+        instr.flags.V = true;
 	}
 	else if (aop == 0 && aopcde == 6)
 	{
-		OUTS (outf, dregs (dst0));
-		OUTS (outf, " = MAX (");
-		OUTS (outf, dregs (src0));
-		OUTS (outf, ", ");
-		OUTS (outf, dregs (src1));
-		OUTS (outf, ") (V)");
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_MAX };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_COMMA };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src1) };
+        instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_VMOD };
+        instr.flags.V = true;
 	}
 	else if (HL == 1 && aopcde == 1)
 	{
-		OUTS (outf, dregs (dst1));
-		OUTS (outf, " = ");
-		OUTS (outf, dregs (src0));
-		OUTS (outf, " +|- ");
-		OUTS (outf, dregs (src1));
-		OUTS (outf, ", ");
-		OUTS (outf, dregs (dst0));
-		OUTS (outf, " = ");
-		OUTS (outf, dregs (src0));
-		OUTS (outf, " -|+ ");
-		OUTS (outf, dregs (src1));
-		amod0amod2 (s, x, aop, outf);
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst1) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_PLUSORMINUS };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src1) };
+
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_COMMA };
+
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_MINUSORPLUS };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src1) };
+
+		amod0amod2 (s, x, aop, instr);
 	}
 	else if (aop == 0 && aopcde == 4)
 	{
-		OUTS (outf, dregs (dst0));
-		OUTS (outf, " = ");
-		OUTS (outf, dregs (src0));
-		OUTS (outf, " + ");
-		OUTS (outf, dregs (src1));
-		amod1 (s, x, outf);
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_PLUS };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src1) };
+
+		amod1 (s, x, instr);
 	}
 	else if (aop == 0 && aopcde == 0)
 	{
-		OUTS (outf, dregs (dst0));
-		OUTS (outf, " = ");
-		OUTS (outf, dregs (src0));
-		OUTS (outf, " +|+ ");
-		OUTS (outf, dregs (src1));
-		amod0 (s, x, outf);
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_PLUSORPLUS };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src1) };
+		amod0 (s, x, instr);
 	}
 	else if (aop == 0 && aopcde == 24)
 	{
-		OUTS (outf, dregs (dst0));
-		OUTS (outf, " = BYTEPACK (");
-		OUTS (outf, dregs (src0));
-		OUTS (outf, ", ");
-		OUTS (outf, dregs (src1));
-		OUTS (outf, ")");
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_BYTEPACK };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_COMMA };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src1) };
 	}
 	else if (aop == 1 && aopcde == 24)
 	{
-		OUTS (outf, "(");
-		OUTS (outf, dregs (dst1));
-		OUTS (outf, ", ");
-		OUTS (outf, dregs (dst0));
-		OUTS (outf, ") = BYTEUNPACK ");
-		OUTS (outf, dregs (src0 + 1));
-		OUTS (outf, ":");
-		OUTS (outf, imm5d (src0));
-		aligndir (s, outf);
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst1) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_COMMA };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_BYTEUNPACK };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src0 + 1) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_COLON };
+        instr.operands[instr.operand_count++] = { .cls = IMM, .imm = imm5(src0) };
+		aligndir (s, instr);
 	}
 	else if (aopcde == 13)
 	{
-		OUTS (outf, "(");
-		OUTS (outf, dregs (dst1));
-		OUTS (outf, ", ");
-		OUTS (outf, dregs (dst0));
-		OUTS (outf, ") = SEARCH ");
-		OUTS (outf, dregs (src0));
-		OUTS (outf, " (");
-		searchmod (aop, outf);
-		OUTS (outf, ")");
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst1) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_COMMA };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst0) };
+        instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
+        instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_SEARCH };
+        instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src0) };
+		searchmod (aop, instr);
 	}
-	else
-		return 0;
+	else {
+        instr.operation = OP_UNSUPPORTED;
+		return false;
+    }
 
-	return 4;
-*/
+	return true;
 }

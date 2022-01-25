@@ -150,7 +150,48 @@ enum OpLiteral {
     OL_RMOD,
     OL_BYTEOP2P,
     OL_THMOD,
-    OL_TLMOD
+    OL_TLMOD,
+    OL_RNDHMOD,
+    OL_RNDLMOD,
+    OL_ABS,
+    OL_HIMOD,
+    OL_RNDMOD,
+    OL_VMOD,
+    OL_BYTEOP3P,
+    OL_LOMOD,
+    OL_SIGN,
+    OL_SAA,
+    OL_DISALGNEXCPT,
+    OL_BYTEOP1P,
+    OL_TMOD,
+    OL_BYTEOP16P,
+    OL_BYTEOP16M,
+    OL_MIN,
+    OL_MAX,
+    OL_BYTEPACK,
+    OL_BYTEUNPACK,
+    OL_SEARCH,
+    OL_GE,
+    OL_GT,
+    OL_LE,
+    OL_LT,
+    OL_ASHIFT,
+    OL_BY,
+    OL_LSHIFT,
+    OL_ROT,
+    OL_PACK,
+    OL_SIGNBITS,
+    OL_ONES,
+    OL_EXPADJ,
+    OL_BITMUX,
+    OL_VITMAX,
+    OL_EXTRACT,
+    OL_DEPOSIT,
+    OL_BXORSHIFT,
+    OL_BXOR,
+    OL_ALIGN8,
+    OL_ALIGN16,
+    OL_ALIGN24,
 };
 
 static const char *mnemonics[] = {
@@ -203,7 +244,48 @@ static const char *mnemonics[] = {
     "(R)",
     "BYTEOP2P",
     "(TH)",
-    "(TL)"
+    "(TL)",
+    "(RNDH)",
+    "(RNDL)",
+    "ABS",
+    "(HI)",
+    "(RND)",
+    "(V)",
+    "BYTEOP3P",
+    "(LO)",
+    "SIGN",
+    "SAA",
+    "DISALGNEXCPT",
+    "BYTEOP1P",
+    "(T)",
+    "BYTEOP16P",
+    "BYTEOP16M",
+    "MIN",
+    "MAX",
+    "BYTEPACK",
+    "BYTEUNPACK",
+    "SEARCH",
+    "(GE)",
+    "(GT)",
+    "(LE)",
+    "(LT)",
+    "ASHIFT",
+    "BY",
+    "LSHIFT",
+    "ROT",
+    "PACK",
+    "SIGNBITS",
+    "ONES",
+    "EXPADJ",
+    "BITMUX",
+    "VIT_MAX",
+    "EXTRACT",
+    "DEPOSIT",
+    "BXORSHIFT",
+    "BXOR",
+    "ALIGN8",
+    "ALIGN16",
+    "ALIGN24"
 };
 
 enum Operator {
@@ -238,7 +320,11 @@ enum Operator {
     OPER_OPENP,
     OPER_CLOSEP,
     OPER_MUL,
-    OPER_COLON
+    OPER_COLON,
+    OPER_MINUSORPLUS,
+    OPER_PLUSORPLUS,
+    OPER_MINUSORMINUS,
+    OPER_PLUSORMINUS,
 };
 
 static const char *operator_names[] = {
@@ -246,7 +332,7 @@ static const char *operator_names[] = {
     " |= ", " &= ", " ^= ", " + ", " >> ", " << ", " <<< ",
     " >>= ", " <<= ", " >>>= ", " *= ", " = -", " = ~", ", ",
     " -= ", " - ", " & ", " | ", " ^ ", " ++ ", " -- ", "(",
-    ") ", " * ", ":"
+    ") ", " * ", ":", " -|+ ", " +|+ ", " -|- ", " +|+ "
 };
 
 enum Operation {
@@ -299,6 +385,8 @@ enum Operation {
     OP_DSPALU,
     OP_RAISE,
     OP_EXCPT,
+    OP_DSPSHIFT,
+    OP_DSPSHIFTIMM,
 
     OP_UNSUPPORTED,
     OP_ILLEGAL
@@ -388,6 +476,12 @@ struct Instruction {
         bool R;
         bool TH;
         bool TL;
+        bool RNDH;
+        bool RNDL;
+        bool HI;
+        bool RND;
+        bool V;
+        bool LO;
     } flags;
 
 };

@@ -31,4 +31,7 @@
 #include "Linkage.h"
 #include "Dsp32MuAc.h"
 #include "Dsp32Mult.h"
+#include "Dsp32ALU.h"
+#include "Dsp32Shift.h"
+#include "Dsp32ShiftImm.h"
 #endif
