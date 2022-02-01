@@ -35,7 +35,7 @@ static int _disasm_insn_bfin(uint32_t instructionCandidate, uint32_t addr, black
 		{
             //ILLEGAL
             result.operation = blackfin::OP_ILLEGAL;
-			return 0;
+			return 2;
 		}
 
         // MNOP, just return length (do we want MNOPS/NOPS in the disasm? probably)
@@ -240,7 +240,7 @@ static int _disasm_insn_bfin(uint32_t instructionCandidate, uint32_t addr, black
 	if (result.length == 0)
 	{
         result.operation = blackfin::OP_ILLEGAL;
-        return 0;
+        return 2;
 	}
 
 	return result.length;
