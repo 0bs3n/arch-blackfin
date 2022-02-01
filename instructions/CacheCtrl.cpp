@@ -11,7 +11,7 @@ CacheCtrlInstruction::Disassemble(uint16_t instructionWord, struct blackfin::Ins
 
     instr.operands[0].cls = blackfin::MNEMOMIC;
     instr.operands[1] = { .cls = blackfin::MEM_ACCESS, .mem_access = {
-        .mode = blackfin::MEM_REGMOD,
+        .mode = blackfin::MEM_REG,
         .ptr_reg = pregs(reg),
         .width = 4
     }};
@@ -32,7 +32,10 @@ CacheCtrlInstruction::Disassemble(uint16_t instructionWord, struct blackfin::Ins
         break;
     }
 
-    if (a) instr.operands[1].mem_access.post_inc = true;
+    if (a) {
+        instr.operands[1].mem_access.mode = blackfin::MEM_REGIMM;
+        instr.operands[1].mem_access.idx_imm = 1;
+    }
 
     return true;
 }

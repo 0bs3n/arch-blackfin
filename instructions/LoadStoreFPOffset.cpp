@@ -32,7 +32,7 @@ LoadStoreFPOffsetInstruction::Disassemble(uint16_t instructionWord, struct black
 	else if (W == 1)
 	{
         // [FP - offset] = reg
-        instr.operation = OP_LD;
+        instr.operation = OP_ST;
         instr.operands[0] = { .cls = MEM_ACCESS, .mem_access = {
             .mode = MEM_REGOFF,
             .ptr_reg = REG_FP,

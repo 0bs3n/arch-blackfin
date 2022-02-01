@@ -16,7 +16,7 @@ bool PushPopInstruction::Disassemble(uint16_t instructionWord, struct blackfin::
     if (!W && mostreg(reg, grp)) {
         instr.operands[0] = { .cls = blackfin::REG, .reg = allregs(reg, grp) };
         instr.operands[2] = { .cls = blackfin::MEM_ACCESS, .mem_access = {
-            .mode = blackfin::MEM_REGMOD,
+            .mode = blackfin::MEM_REGIMM,
             .ptr_reg = REG_SP,
             .post_inc = true
         }};
@@ -25,7 +25,7 @@ bool PushPopInstruction::Disassemble(uint16_t instructionWord, struct blackfin::
     // PUSH
     } else if (W && allreg(reg, grp) && !(grp == 1 && reg == 6)) {
         instr.operands[0] = { .cls = blackfin::MEM_ACCESS, .mem_access = {
-            .mode = blackfin::MEM_REGMOD,
+            .mode = blackfin::MEM_REGIMM,
             .ptr_reg = REG_SP,
             .pre_dec = true
         }};

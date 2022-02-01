@@ -7,9 +7,6 @@ bool Comp3OpInstruction::Disassemble(uint16_t instructionWord, struct blackfin::
 	+---+---+---+---|---+---+---+---|---+---+---+---|---+---+---+---+
 	| 0 | 1 | 0 | 1 |.opc.......|.dst.......|.src1......|.src0......|
 	+---+---+---+---|---+---+---+---|---+---+---+---|---+---+---+---+  */
-    // 0101 1110 1001 0100
-    // 0101 111 010 010 100
-    // op = 7, dst = 2, src1 = 2, src0 = 4
 	int opc  = ((instructionWord >> COMP3op_opc_bits) & COMP3op_opc_mask);
 	int dst  = ((instructionWord >> COMP3op_dst_bits) & COMP3op_dst_mask);
 	int src0 = ((instructionWord >> COMP3op_src0_bits) & COMP3op_src0_mask);
@@ -40,6 +37,7 @@ bool Comp3OpInstruction::Disassemble(uint16_t instructionWord, struct blackfin::
         case 6:
         case 7:
             instr.operand_count = 7;
+            instr.operation = blackfin::OP_ALUADDSHIFTED;
             instr.operands[0] = { .cls = blackfin::REG, .reg = pregs(dst) };
             instr.operands[1] = { .cls = blackfin::OPERATOR, .operat = blackfin::OPER_EQ };
             instr.operands[2] = { .cls = blackfin::REG, .reg = pregs(src0) };

@@ -20,6 +20,7 @@ bool CCFlagInstruction::Disassemble(uint16_t instructionWord, struct blackfin::I
 
     if (parallel) return false;
 
+    // CC = reg ==/</<=/u</u<= reg
     instr.operands[0].cls = blackfin::SREG;
     instr.operands[0].reg = REG_CC;
     instr.operands[0].flags.cc_inverted = false;
@@ -30,9 +31,9 @@ bool CCFlagInstruction::Disassemble(uint16_t instructionWord, struct blackfin::I
     instr.operand_count = 5;
 
     if (opc == 5 || opc == 6 || opc == 7) {
-        instr.operands[2].cls = blackfin::AREG;
+        instr.operands[2].cls = blackfin::REG;
         instr.operands[2].reg = REG_A0;
-        instr.operands[4].cls = blackfin::AREG;
+        instr.operands[4].cls = blackfin::REG;
         instr.operands[4].reg = REG_A1;
         switch (opc) {
         case 5:
@@ -49,19 +50,19 @@ bool CCFlagInstruction::Disassemble(uint16_t instructionWord, struct blackfin::I
     
     switch (arg_mode) {
     case DREG_DREG:
-        instr.operands[2].cls = blackfin::DREG;
+        instr.operands[2].cls = blackfin::REG;
         instr.operands[2].reg = dregs(x);
-        instr.operands[4].cls = blackfin::DREG;
+        instr.operands[4].cls = blackfin::REG;
         instr.operands[4].reg = dregs(y);
         break;
     case PREG_PREG:
-        instr.operands[2].cls = blackfin::PREG;
+        instr.operands[2].cls = blackfin::REG;
         instr.operands[2].reg = pregs(x);
-        instr.operands[4].cls = blackfin::PREG;
+        instr.operands[4].cls = blackfin::REG;
         instr.operands[4].reg = pregs(y);
         break;
     case DREG_IMM:
-        instr.operands[2].cls = blackfin::DREG;
+        instr.operands[2].cls = blackfin::REG;
         instr.operands[2].reg = dregs(x);
         switch (opc) {
         case 0:
@@ -72,13 +73,13 @@ bool CCFlagInstruction::Disassemble(uint16_t instructionWord, struct blackfin::I
             break;
         case 3:
         case 4:
-            instr.operands[4].cls = blackfin::UIMM;
-            instr.operands[4].uimm = uimm3(y);
+            instr.operands[4].cls = blackfin::IMM;
+            instr.operands[4].imm = uimm3(y);
             break;
         }
         break;
     case PREG_IMM:
-        instr.operands[2].cls = blackfin::PREG;
+        instr.operands[2].cls = blackfin::REG;
         instr.operands[2].reg = pregs(x);
         switch (opc) {
         case 0:
@@ -89,8 +90,8 @@ bool CCFlagInstruction::Disassemble(uint16_t instructionWord, struct blackfin::I
             break;
         case 3:
         case 4:
-            instr.operands[4].cls = blackfin::UIMM;
-            instr.operands[4].uimm = uimm3(y);
+            instr.operands[4].cls = blackfin::IMM;
+            instr.operands[4].imm = uimm3(y);
             break;
         }
         break;

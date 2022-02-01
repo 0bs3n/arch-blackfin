@@ -52,7 +52,7 @@ PushPopMultipleInstruction::Disassemble(uint16_t instructionWord, struct blackfi
         }};
         instr.operands[0] = stack_op;
         instr.operands[2] = range;
-        instr.operation = blackfin::OP_ST;
+        instr.operation = blackfin::OP_PUSHMULT;
         return true;
     } else { // POP
         stack_op = { .cls = MEM_ACCESS, .mem_access = {
@@ -62,7 +62,7 @@ PushPopMultipleInstruction::Disassemble(uint16_t instructionWord, struct blackfi
         }};
         instr.operands[0] = range;
         instr.operands[2] = stack_op;
-        instr.operation = blackfin::OP_LD;
+        instr.operation = blackfin::OP_POPMULT;
         return true;
     }
 }

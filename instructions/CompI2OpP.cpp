@@ -13,7 +13,7 @@ CompI2OpPInstruction::Disassemble(uint16_t instructionWord, struct blackfin::Ins
     
     instr.operation = blackfin::OP_LDIMM; 
     instr.operand_count = 3;
-    instr.operands[0].cls = blackfin::PREG;
+    instr.operands[0].cls = blackfin::REG;
     instr.operands[0].reg = pregs(dst);
 
     instr.operands[1].cls = blackfin::OPERATOR;

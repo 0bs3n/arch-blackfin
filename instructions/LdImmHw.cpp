@@ -18,14 +18,14 @@ LdImmHwInstruction::Disassemble(uint16_t instructionWordHigh, uint16_t instructi
     instr.operands[1].operat = blackfin::OPER_EQ;
 
     if (!Z && !S) {
-        instr.operands[2].cls = blackfin::UIMM;
-        instr.operands[2].uimm = uimm16(hword);
+        instr.operands[2].cls = blackfin::IMM;
+        instr.operands[2].imm = uimm16(hword);
         if (H) {
-            instr.operands[0].cls = blackfin::REGHI;
+            instr.operands[0].cls = blackfin::REG;
             if (grp == 0) instr.operands[0].reg = dregs_hi(reg);
             else instr.operands[0].reg = regs_hi(reg, grp);
         } else {
-            instr.operands[0].cls = blackfin::REGLO;
+            instr.operands[0].cls = blackfin::REG;
             if (grp == 0) instr.operands[0].reg = dregs_lo(reg);
             else instr.operands[0].reg = regs_lo(reg, grp);
         }
