@@ -403,6 +403,19 @@ enum MemAccessMode {
     MEM_REGMOD
 };
 
+struct MemAccess {
+    enum MemAccessMode mode;
+    enum Register ptr_reg;
+    enum Register idx_reg;
+    int ptr_imm;
+    int idx_imm;
+    int offset;
+    enum Operator oper;
+    int width;
+    bool pre_dec;
+    bool post_inc;
+};
+
 struct InstructionOperand {
 	enum OperandClass cls;
 	struct {
@@ -417,18 +430,7 @@ struct InstructionOperand {
         int inc_ammount;
 	} flags;
 	enum Register reg;
-    struct {
-        enum MemAccessMode mode;
-        enum Register ptr_reg;
-        enum Register idx_reg;
-        int ptr_imm;
-        int idx_imm;
-        int offset;
-        enum Operator oper;
-        int width;
-        bool pre_dec;
-        bool post_inc;
-    } mem_access;
+    struct MemAccess mem_access;
     struct {
         enum Register top;
         enum Register bottom;
@@ -541,6 +543,8 @@ typedef union _ieee754_double {
     const char *get_register_name(Register reg);
     const char *get_operator_string(Operator op);
     const char *get_mnemonic_string(OpLiteral mnemonic);
+    int get_register_size(Register reg);
+    enum Register get_reg_for_reg_part(uint32_t reg);
     /*
 	//Helpers for disassembling the instruction operands to strings
 	const char* get_operation(Operation operation);

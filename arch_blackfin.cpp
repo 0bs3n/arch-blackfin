@@ -17,4 +17,15 @@ namespace blackfin {
     {
         return mnemonics[mnemonic];
     }
+
+    int
+    get_register_size(Register reg)
+    {
+        return reg_sizes[reg];
+    }
+
+    enum Register get_reg_for_reg_part(uint32_t reg)
+    {
+        return reg_part_to_reg[reg];
+    }
 }
