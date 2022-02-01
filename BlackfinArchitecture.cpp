@@ -6,10 +6,9 @@
 #include "Disassembler.h"
 #include <string.h>
 
-#define MYLOG BinaryNinja::LogInfo
+#define LOG BinaryNinja::LogInfo
 using namespace std;
 using namespace BinaryNinja;
-
 
 static BNRegisterInfo RegisterInfo(uint32_t fullWidthReg, size_t offset, size_t size, bool zeroExtend = false)
 {
@@ -30,32 +29,30 @@ BNEndianness BlackfinArchitecture::GetEndianness() const { return BNEndianness::
 
 size_t BlackfinArchitecture::GetAddressSize() const
 {
-    // MYLOG("%s()\n", __func__);
     return 4;
 }
 
 size_t BlackfinArchitecture::GetDefaultIntegerSize() const
 {
-    // MYLOG("%s()\n", __func__);
     return 4;
 }
 
 size_t BlackfinArchitecture::GetInstructionAlignment() const
 {
-    // MYLOG("%s()\n", __func__);
     return 2;
 }
 
 size_t BlackfinArchitecture::GetMaxInstructionLength() const
 {
-    // MYLOG("%s()\n", __func__);
-    return 4;
+    return 8;
 }
 
 std::string BlackfinArchitecture::GetFlagName(uint32_t flag) { 
     char result[32];
 	switch (flag)
 	{
+    case IL_FLAG_CC:
+        return "CC";
 	case IL_FLAG_N:
 		return "n";
 	case IL_FLAG_Z:
@@ -76,6 +73,7 @@ std::string BlackfinArchitecture::GetFlagWriteTypeName(uint32_t flags) {
     	switch (flags)
 	{
 		case IL_FLAGWRITE_ALL: return "*";
+		case IL_FLAGWRITE_CC: return "CC";
 		case IL_FLAGWRITE_NZ: return "nz";
 		default:
 			return "";
@@ -87,6 +85,8 @@ BNFlagRole BlackfinArchitecture::GetFlagRole(uint32_t flag, uint32_t semClass) {
 	{
 	case IL_FLAG_N:
 		return NegativeSignFlagRole;
+	case IL_FLAG_CC:
+		return SpecialFlagRole;
 	case IL_FLAG_Z:
 		return ZeroFlagRole;
 	case IL_FLAG_C:
@@ -102,9 +102,11 @@ std::vector<uint32_t> BlackfinArchitecture::GetFlagsWrittenByFlagWriteType(uint3
     switch (flags)
 	{
 	case IL_FLAGWRITE_ALL:
-		return vector<uint32_t> { IL_FLAG_N, IL_FLAG_Z, IL_FLAG_C, IL_FLAG_V };
+		return vector<uint32_t> { IL_FLAG_N, IL_FLAG_CC, IL_FLAG_Z, IL_FLAG_C, IL_FLAG_V };
 	case IL_FLAGWRITE_NZ:
 		return vector<uint32_t> { IL_FLAG_N, IL_FLAG_Z };
+	case IL_FLAGWRITE_CC:
+		return vector<uint32_t> { IL_FLAG_CC };
 	default:
 		return vector<uint32_t> {};
 	}
@@ -150,27 +152,53 @@ std::string BlackfinArchitecture::GetRegisterName(uint32_t reg) {
     if (reg >= REG_RL0 && reg < REG_LASTREG) {
         return blackfin::get_register_name(static_cast<enum Register>(reg));
     } else {
-        // is there a dedicated binja logging function?
-        // LogError("Unknown Register: %x -- investigate!\n", reg);
         return "unknown";
     }
 }
 
 std::vector<uint32_t> BlackfinArchitecture::GetFullWidthRegisters() {
-    std::vector<uint32_t> vec; 
-    vec.push_back(1);
-    return vec;
+    return std::vector<uint32_t> {
+        REG_R0, REG_R1, REG_R2, REG_R3, REG_R4, REG_R5, REG_R6, REG_R7,
+        REG_P0, REG_P1, REG_P2, REG_P3, REG_P4, REG_P5, REG_SP, REG_FP, 
+        REG_A0, REG_A1, REG_I0, REG_I1, REG_I2, REG_I3, REG_M0, REG_M1,
+        REG_M2, REG_M3, REG_B0, REG_B1, REG_B2, REG_B3, REG_L0, REG_L1, REG_L2, REG_L3,
+        REG_LC0, REG_LC1, REG_ASTAT, REG_RETS, REG_LT0, REG_LB0, REG_LT1, REG_LB1,
+        REG_CYCLES, REG_CYCLES2, REG_USP, REG_SEQSTAT, REG_SYSCFG, REG_RETI, REG_RETX, REG_RETN,
+        REG_RETE, REG_EMUDAT, 
+    };
 }
 
 std::vector<uint32_t> BlackfinArchitecture::GetAllRegisters() {
-    std::vector<uint32_t> vec; 
-    vec.push_back(1);
-    return vec;
+    return std::vector<uint32_t> {
+        REG_RL0, REG_RL1, REG_RL2, REG_RL3, REG_RL4, REG_RL5, REG_RL6, REG_RL7,
+        REG_RH0, REG_RH1, REG_RH2, REG_RH3, REG_RH4, REG_RH5, REG_RH6, REG_RH7,
+        REG_R0, REG_R1, REG_R2, REG_R3, REG_R4, REG_R5, REG_R6, REG_R7,
+        REG_R1_0, REG_R3_2, REG_R5_4, REG_R7_6, 
+        REG_P0, REG_P1, REG_P2, REG_P3, REG_P4, REG_P5, REG_SP, REG_FP, 
+        REG_A0x, REG_A1x, REG_A0w, REG_A1w,
+        REG_A0, REG_A1, REG_I0, REG_I1, REG_I2, REG_I3, REG_M0, REG_M1,
+        REG_M2, REG_M3, REG_B0, REG_B1, REG_B2, REG_B3, REG_L0, REG_L1, REG_L2, REG_L3,
+        REG_AZ, REG_AN, REG_AC0, REG_AC1, REG_AV0, REG_AV1, REG_AV0S, REG_AV1S,
+        REG_AQ, REG_V, REG_VS,
+        REG_sftreset, REG_omode, REG_excause, REG_emucause, REG_idle_req, REG_hwerrcause, REG_CC, 
+        REG_LC0, REG_LC1, REG_ASTAT, REG_RETS, REG_LT0, REG_LB0, REG_LT1, REG_LB1,
+        REG_CYCLES, REG_CYCLES2, REG_USP, REG_SEQSTAT, REG_SYSCFG, REG_RETI, REG_RETX, REG_RETN,
+        REG_RETE, REG_EMUDAT, 
+        REG_BR0, REG_BR1, REG_BR2, REG_BR3, REG_BR4, REG_BR5, REG_BR6,
+        REG_BR7, REG_PL0, REG_PL1, REG_PL2, REG_PL3, REG_PL4, REG_PL5, REG_SLP, REG_FLP,
+        REG_PH0, REG_PH1, REG_PH2, REG_PH3, REG_PH4, REG_PH5, REG_SHP, REG_FHP,
+        REG_IL0, REG_IL1, REG_IL2, REG_IL3, REG_ML0, REG_ML1, REG_ML2, REG_ML3,
+        REG_BL0, REG_BL1, REG_BL2, REG_BL3, REG_LL0, REG_LL1, REG_LL2, REG_LL3,
+        REG_IH0, REG_IH1, REG_IH2, REG_IH3, REG_MH0, REG_MH1, REG_MH2, REG_MH3,
+        REG_BH0, REG_BH1, REG_BH2, REG_BH3, REG_LH0, REG_LH1, REG_LH2, REG_LH3,
+        REG_AC0_COPY, REG_V_COPY, REG_RND_MOD, REG_A0H, REG_A0L, REG_A1H, REG_A1L,
+        REG_LASTREG,
+    };
 }
 
 std::vector<uint32_t> BlackfinArchitecture::GetAllFlags() {
     return vector<uint32_t>{
-		IL_FLAG_N, IL_FLAG_Z, IL_FLAG_C, IL_FLAG_V, IL_FLAG_Q
+		IL_FLAG_N, IL_FLAG_CC, IL_FLAG_Z, IL_FLAG_C, IL_FLAG_V, IL_FLAG_Q
 	};
 }
 
@@ -180,16 +208,6 @@ std::vector<uint32_t> BlackfinArchitecture::GetAllFlagWriteTypes() {
 		IL_FLAGWRITE_NZ
 	};
 }
-/*
-enum Register
-{
-  REG_AZ, REG_AN, REG_AC0, REG_AC1, REG_AV0, REG_AV1, REG_AV0S, REG_AV1S, REG_AQ, REG_V, REG_VS, REG_CC, 
-  REG_sftreset, REG_omode, REG_excause, REG_emucause, REG_idle_req, REG_hwerrcause, 
-  REG_EMUDAT, REG_BR0, REG_BR1, REG_BR2, REG_BR3, REG_BR4, REG_BR5, REG_BR6, REG_BR7, 
-  REG_AC0_COPY, REG_V_COPY, REG_RND_MOD,
-  REG_LASTREG,
-};
-*/
 
 BNRegisterInfo BlackfinArchitecture::GetRegisterInfo(uint32_t reg) 
 {
@@ -202,12 +220,12 @@ BNRegisterInfo BlackfinArchitecture::GetRegisterInfo(uint32_t reg)
     // top 8 bits of accumulator
     case REG_A0x:
     case REG_A1x:
-        return RegisterInfo(reg, 0, 1);
+        return RegisterInfo(blackfin::get_reg_for_reg_part(reg), 4, 1);
 
     // low 32 bits of accumulator
     case REG_A0w:
     case REG_A1w:
-        return RegisterInfo(reg, 1, 4);
+        return RegisterInfo(blackfin::get_reg_for_reg_part(reg), 0, 4);
 
     // Full-width 32 bit registers
     case REG_R0:
@@ -294,7 +312,7 @@ BNRegisterInfo BlackfinArchitecture::GetRegisterInfo(uint32_t reg)
     case REG_LL1:
     case REG_LL2:
     case REG_LL3:
-        return RegisterInfo(reg, 2, 2);
+        return RegisterInfo(blackfin::get_reg_for_reg_part(reg), 0, 2);
     // High 16 bits of 32 bit register 
     case REG_RH0:
     case REG_RH1:
@@ -328,9 +346,11 @@ BNRegisterInfo BlackfinArchitecture::GetRegisterInfo(uint32_t reg)
     case REG_LH1:
     case REG_LH2:
     case REG_LH3:
-        return RegisterInfo(reg, 0, 2);
+        return RegisterInfo(blackfin::get_reg_for_reg_part(reg), 2, 2);
+    case REG_CC:
+        return RegisterInfo(reg, 0, 1);
     default:
-        return RegisterInfo(0, 0, 0); // FIXME: Better fail case?
+        return RegisterInfo(REG_LASTREG, 0, 0); // FIXME: Better fail case?
     }
 }
 
@@ -358,14 +378,9 @@ int BlackfinArchitecture::Disassemble(uint8_t *data, uint64_t addr, size_t maxLe
 }
 
 bool BlackfinArchitecture::GetInstructionText(const uint8_t *data, uint64_t addr, size_t &len, vector<BinaryNinja::InstructionTextToken>& result) {
-    MYLOG("len: %lu", len);
     blackfin::Instruction instr;
     memset(&instr, 0, sizeof(instr));
     int instr_size = Disassemble((uint8_t*)data, addr, 0, instr);
-    MYLOG("reported len: %u", instr_size);
-    MYLOG("instr operation: %d", instr.operation);
-    MYLOG("instr operation op count: %d", instr.operand_count);
-    MYLOG("instr opcode: %x", instr.opcode);
 
     len = instr.length;
     if (instr.operation == blackfin::OP_ILLEGAL) {
@@ -380,7 +395,6 @@ bool BlackfinArchitecture::GetInstructionText(const uint8_t *data, uint64_t addr
 
     for (int i = 0; i < instr.operand_count; i++) {
         blackfin::InstructionOperand operand = instr.operands[i];
-        MYLOG("operand type: %d", operand.cls);
         char imm_string[60] = {0};
         if (operand.flags.cc_inverted) {
             result.emplace_back(TextToken, "!");
@@ -390,7 +404,6 @@ bool BlackfinArchitecture::GetInstructionText(const uint8_t *data, uint64_t addr
             return true;
 
         case blackfin::MNEMOMIC:
-            MYLOG("got mnemonic operand");
             if (i > 0 && instr.operands[i - 1].cls != blackfin::OPERATOR) 
                 result.emplace_back(TextToken, " ");
             result.emplace_back(InstructionToken, get_mnemonic_string(operand.mnemonic));
@@ -403,19 +416,16 @@ bool BlackfinArchitecture::GetInstructionText(const uint8_t *data, uint64_t addr
         case blackfin::SREG:
         case blackfin::REGHI:
         case blackfin::REGLO:
-            MYLOG("got register operand");
             const char *inc_dec_symbol;
             result.emplace_back(RegisterToken, GetRegisterName(operand.reg));
             if (instr.operands[i + 1].cls == blackfin::REG) result.emplace_back(TextToken, " ");
             break; 
 
         case blackfin::OPERATOR:
-            MYLOG("got operator operand");
             result.emplace_back(TextToken, blackfin::get_operator_string(operand.operat));
             break;
 
         case blackfin::IMM:
-            MYLOG("got imm operand");
             if (operand.flags.pcrelative) {
                 sprintf(imm_string, "%#lx", operand.imm + addr);
                 result.emplace_back(PossibleAddressToken, imm_string, operand.imm + addr);
@@ -427,7 +437,6 @@ bool BlackfinArchitecture::GetInstructionText(const uint8_t *data, uint64_t addr
 
         case blackfin::UIMM:
             sprintf(imm_string, "%#x", operand.uimm);
-            MYLOG("got uimm operand");
             result.emplace_back(IntegerToken, imm_string, operand.uimm);
             break;
 
@@ -462,7 +471,6 @@ bool BlackfinArchitecture::GetInstructionText(const uint8_t *data, uint64_t addr
                 if (operand.mem_access.post_inc) result.emplace_back(TextToken, "++");
                 break;
             case blackfin::MEM_REG:
-                printf("regname: %s", GetRegisterName(operand.mem_access.ptr_reg).c_str());
                 result.emplace_back(RegisterToken, GetRegisterName(operand.mem_access.ptr_reg));
                 break;
             case blackfin::MEM_IMM:
@@ -470,14 +478,12 @@ bool BlackfinArchitecture::GetInstructionText(const uint8_t *data, uint64_t addr
                 result.emplace_back(IntegerToken, imm_string, operand.mem_access.ptr_imm);
                 break;
             case blackfin::MEM_REGIMM:
-                printf("regname: %s", GetRegisterName(operand.mem_access.ptr_reg).c_str());
                 sprintf(imm_string, "%#x", operand.mem_access.idx_imm);
                 result.emplace_back(RegisterToken, GetRegisterName(operand.mem_access.ptr_reg));
                 result.emplace_back(TextToken, get_operator_string(operand.mem_access.oper));
                 if (operand.mem_access.idx_imm != 1) result.emplace_back(IntegerToken, imm_string, operand.mem_access.idx_imm);
                 break;
             case blackfin::MEM_REGREG:
-                printf("regname: %s", GetRegisterName(operand.mem_access.ptr_reg).c_str());
                 result.emplace_back(RegisterToken, GetRegisterName(operand.mem_access.ptr_reg));
                 result.emplace_back(TextToken, get_operator_string(operand.mem_access.oper));
                 result.emplace_back(RegisterToken, GetRegisterName(operand.mem_access.idx_reg));
@@ -501,23 +507,12 @@ bool BlackfinArchitecture::GetInstructionText(const uint8_t *data, uint64_t addr
         if (operand.flags.zero_extended) result.emplace_back(TextToken, " (Z)");
     }
     if ((instr.operation == blackfin::OP_DSPALU || 
-        instr.operation == blackfin::OP_DSPMAC || 
-        instr.operation == blackfin::OP_DSPMUL ||
-        instr.operation == blackfin::OP_DSPSHIFT ||
-        instr.operation == blackfin::OP_DSPSHIFTIMM)) {
-        result.emplace_back(TextToken, " {DSP OP}");
+         instr.operation == blackfin::OP_DSPMAC || 
+         instr.operation == blackfin::OP_DSPMUL ||
+         instr.operation == blackfin::OP_DSPSHIFT ||
+         instr.operation == blackfin::OP_DSPSHIFTIMM)) {
+            result.emplace_back(TextToken, " {DSP OP}");
     }
-    /*
-    if (instr.operation == blackfin::OP_MOVIMM) {
-        result.emplace_back(RegisterToken, GetRegisterName(instr.operands[0].reg));
-        result.emplace_back(TextToken, " ");
-        result.emplace_back(OperandSeparatorToken, instr.operands[1].operat == blackfin::OPER_EQ ? "=" : "+=");
-        result.emplace_back(TextToken, " ");
-        char operand_string[60];
-        sprintf(operand_string, "%x", instr.operands[2].imm);
-        result.emplace_back(IntegerToken, operand_string, instr.operands[2].imm);
-    }
-    */
     return true;
 }
 
@@ -564,17 +559,675 @@ bool BlackfinArchitecture::GetInstructionInfo(const uint8_t *data, uint64_t addr
         case blackfin::OL_RTX:
             result.AddBranch(UnresolvedBranch);
             break;
+        default:
+            break;
         }
     }
     return true;
 }
 
-/*
-static void RegisterBlackfinArchitecture() {
-    BlackfinArchitecture *bfin = new BlackfinArchitecture("blackfin");
-    BinaryNinja::Architecture::Register(bfin);
+static void ConditionalJump(Architecture* arch, LowLevelILFunction& il, 
+        size_t addrSize, uint64_t t, uint64_t f, bool cc_inverted, ExprId cond = 0)
+{
+	BNLowLevelILLabel* trueLabel = il.GetLabelForAddress(arch, t);
+	BNLowLevelILLabel* falseLabel = il.GetLabelForAddress(arch, f);
+
+    ExprId flag = cc_inverted ? il.Not(4, il.Flag(IL_FLAG_CC)) : il.Flag(IL_FLAG_CC);
+
+    ExprId c = cond == 0 ? flag : cond;
+
+	if (trueLabel && falseLabel)
+	{
+		il.AddInstruction(il.If(c, *trueLabel, *falseLabel));
+		return;
+	}
+
+	LowLevelILLabel trueCode, falseCode;
+
+	if (trueLabel)
+	{
+		il.AddInstruction(il.If(c, *trueLabel, falseCode));
+		il.MarkLabel(falseCode);
+		il.AddInstruction(il.Jump(il.ConstPointer(addrSize, f)));
+		return;
+	}
+
+	if (falseLabel)
+	{
+		il.AddInstruction(il.If(c, trueCode, *falseLabel));
+		il.MarkLabel(trueCode);
+		il.AddInstruction(il.Jump(il.ConstPointer(addrSize, t)));
+		return;
+	}
+
+	il.AddInstruction(il.If(c, trueCode, falseCode));
+	il.MarkLabel(trueCode);
+	il.AddInstruction(il.Jump(il.ConstPointer(addrSize, t)));
+	il.MarkLabel(falseCode);
+	il.AddInstruction(il.Jump(il.ConstPointer(addrSize, f)));
 }
-*/
+
+ExprId
+ReadILOperand(blackfin::InstructionOperand &operand, LowLevelILFunction &il, size_t addr, bool isPointer = false)
+{
+    switch (operand.cls) {
+    case blackfin::IMM:
+        if (isPointer) return il.ConstPointer(4, operand.imm);
+        else return il.Const(4, operand.imm);
+    case blackfin::REG:
+        return il.Register(blackfin::get_register_size(operand.reg), operand.reg);
+    default:
+        return il.Undefined();
+    }
+}
+
+using namespace blackfin;
+
+bool 
+BlackfinArchitecture::GetInstructionLowLevelIL(const uint8_t *data, uint64_t addr, size_t &len, LowLevelILFunction &il) 
+{
+    blackfin::Instruction instr;
+    int instr_size = Disassemble((uint8_t *)data, addr, 0, instr);
+
+    if (instr.operation == blackfin::OP_ILLEGAL) {
+        il.AddInstruction(il.Undefined());
+        return false;
+    }
+
+    
+    len = instr_size;
+    bool status = true;
+    switch (instr.operation) {
+    case OP_NOP:
+        il.AddInstruction(il.Nop());
+        break;
+    case OP_RET:
+        il.AddInstruction(il.Return(il.Register(4, instr.operands[1].reg)));
+        break;
+    case OP_JMPABS:
+        il.AddInstruction(il.Jump(il.ConstPointer(4, instr.operands[1].imm)));
+        break;
+    case OP_JMPREL:
+        il.AddInstruction(il.Jump(il.ConstPointer(4, addr + instr.operands[1].imm)));
+        break;
+    case OP_CALLABS:
+        il.AddInstruction(il.Call(il.ConstPointer(4, instr.operands[1].imm)));
+        break;
+    case OP_CALLREL:
+        il.AddInstruction(il.Call(il.ConstPointer(4, addr + instr.operands[1].imm)));
+        break;
+    case OP_CALLREGABS:
+    case OP_CALLREGREL:
+        il.AddInstruction(il.Call(il.Register(4, instr.operands[1].reg)));
+        break;
+    case OP_JMPREGABS:
+    case OP_JMPREGREL:
+        il.AddInstruction(il.Jump(il.Register(4, instr.operands[1].reg)));
+        break;
+    case OP_POPMULT:
+        if (instr.operands[0].cls == REG_RANGE) {
+            enum Register reg_hi = instr.operands[0].r_r.top;
+            enum Register reg_lo = instr.operands[0].r_r.bottom;
+            for (int reg = reg_hi; reg >= reg_lo; reg--) {
+                il.AddInstruction(il.SetRegister(4, reg, il.Pop(4)));
+            }
+        } else if (instr.operands[0].cls == REG_RANGE_PAIR) {
+            enum Register dreg_hi = instr.operands[0].r_r.top;
+            enum Register dreg_lo = instr.operands[0].r_r.bottom;
+            enum Register preg_hi = instr.operands[0].r_p.top;
+            enum Register preg_lo = instr.operands[0].r_p.bottom;
+            for (int reg = preg_hi; reg >= preg_lo; reg--) {
+                il.AddInstruction(il.SetRegister(4, reg, il.Pop(4)));
+            }
+            for (int reg = dreg_hi; reg >= dreg_lo; reg--) {
+                il.AddInstruction(il.SetRegister(4, reg, il.Pop(4)));
+            }
+        }
+        break;
+    case OP_PUSHMULT:
+        if (instr.operands[2].cls == REG_RANGE) {
+            enum Register reg_hi = instr.operands[2].r_r.top;
+            enum Register reg_lo = instr.operands[2].r_r.bottom;
+            for (int reg = reg_lo; reg <= reg_hi; reg++) {
+                il.AddInstruction(il.Push(4, il.Register(4, reg)));
+            }
+        } else if (instr.operands[2].cls == REG_RANGE_PAIR) {
+            enum Register dreg_hi = instr.operands[2].r_r.top;
+            enum Register dreg_lo = instr.operands[2].r_r.bottom;
+            enum Register preg_hi = instr.operands[2].r_p.top;
+            enum Register preg_lo = instr.operands[2].r_p.bottom;
+            for (int reg = dreg_lo; reg <= dreg_hi; reg++) {
+                il.AddInstruction(il.Push(4, il.Register(4, reg)));
+            }
+            for (int reg = preg_lo; reg <= preg_hi; reg++) {
+                il.AddInstruction(il.Push(4, il.Register(4, reg)));
+            }
+        }
+        break;
+    case OP_ALU2OP: {
+        struct InstructionOperand dst = instr.operands[0];
+        enum Operator op = instr.operands[1].operat;
+        struct InstructionOperand src = instr.operands[0];
+        int src_width = GetRegisterInfo(src.reg).size;
+
+        ExprId src_il;
+        if (src.flags.sign_extended) {
+            src_il = il.SignExtend(4, il.Register(src_width, src.reg));
+        } else if (src.flags.zero_extended) {
+            src_il = il.ZeroExtend(4, il.Register(src_width, src.reg));
+        } else {
+            src_il = il.Register(src_width, src.reg);
+        }
+
+        switch (instr.operands[1].operat) {
+        case OPER_ASHIFTR:
+            il.AddInstruction(il.SetRegister(4, 
+                        dst.reg, 
+                        il.ArithShiftRight(4, 
+                            il.Register(4, dst.reg), 
+                            src_il)));
+            break;
+        case OPER_LSHIFTREQ:
+            il.AddInstruction(il.SetRegister(4, 
+                        dst.reg, 
+                        il.LogicalShiftRight(4, 
+                            il.Register(4, dst.reg), 
+                            src_il)));
+            break;
+        case OPER_LSHIFTLEQ:
+            il.AddInstruction(il.SetRegister(4, 
+                        dst.reg, 
+                        il.ShiftLeft(4, 
+                            il.Register(4, dst.reg), 
+                            src_il)));
+            break;
+        case OPER_MULEQ:
+            il.AddInstruction(il.SetRegister(4, 
+                        dst.reg, 
+                        il.Mult(4, 
+                            il.Register(4, dst.reg), 
+                            src_il)));
+            break;
+        case OPER_EQ:
+            il.AddInstruction(il.SetRegister(4, dst.reg, src_il));
+            break;
+        case OPER_EQNEG:
+            il.AddInstruction(il.SetRegister(4, dst.reg, il.Neg(src_width, src_il)));
+            break;
+        case OPER_EQNOT:
+            il.AddInstruction(il.SetRegister(4, dst.reg, il.Not(src_width, src_il)));
+            break;
+        }
+        break;
+    }
+    case OP_ALUADDTHENSHIFT: {
+        struct InstructionOperand dst = instr.operands[0];
+        struct InstructionOperand src = instr.operands[2];
+        int imm = instr.operands[6].imm;
+        il.AddInstruction(il.SetRegister(4, 
+                    dst.reg, 
+                    il.ShiftLeft(4, 
+                        il.Add(4, dst.reg, src.reg),
+                        il.Const(1, imm))));
+        break;
+    }
+    case OP_CCFLAG:
+        switch (instr.operands[3].operat) {
+        case OPER_EQEQ:
+            il.AddInstruction(
+                    il.SetFlag(
+                        IL_FLAG_CC, 
+                        il.CompareEqual(4, 
+                            ReadILOperand(instr.operands[2], il, addr, false), 
+                            ReadILOperand(instr.operands[4], il, addr, false))));
+            break;
+        case OPER_LT:
+            il.AddInstruction(
+                    il.SetFlag(
+                        IL_FLAG_CC, 
+                        il.CompareSignedLessThan(4, 
+                            ReadILOperand(instr.operands[2], il, addr, false), 
+                            ReadILOperand(instr.operands[4], il, addr, false))));
+            break;
+        case OPER_LTE:
+            il.AddInstruction(
+                    il.SetFlag(
+                        IL_FLAG_CC, 
+                        il.CompareSignedLessEqual(4, 
+                            ReadILOperand(instr.operands[2], il, addr, false), 
+                            ReadILOperand(instr.operands[4], il, addr, false))));
+            break;
+        case OPER_LTU:
+            il.AddInstruction(
+                    il.SetFlag(
+                        IL_FLAG_CC, 
+                        il.CompareUnsignedLessThan(4, 
+                            ReadILOperand(instr.operands[2], il, addr, false), 
+                            ReadILOperand(instr.operands[4], il, addr, false))));
+            break;
+        case OPER_LTEU:
+            il.AddInstruction(
+                    il.SetFlag(
+                        IL_FLAG_CC, 
+                        il.CompareUnsignedLessEqual(4, 
+                            ReadILOperand(instr.operands[2], il, addr, false), 
+                            ReadILOperand(instr.operands[4], il, addr, false))));
+            break;
+        }
+        break;
+    default:
+        il.AddInstruction(il.Unimplemented());
+        break;
+    case OP_BRCC:
+        ConditionalJump(this, il, 4, addr + instr.operands[3].imm, addr + 2, instr.operands[1].flags.cc_inverted);
+        break;
+    case OP_LDIMMHW: {
+        blackfin::Instruction next_instr;
+        int next_instrsz = Disassemble((uint8_t*)(data + instr.length), addr, 4, next_instr);
+
+        enum Register reg = instr.operands[0].reg;
+        int imm = instr.operands[2].imm;
+
+        BNRegisterInfo reginfo = GetRegisterInfo(reg);
+        BNRegisterInfo nextreginfo = GetRegisterInfo(next_instr.operands[0].reg);
+
+        bool is_ldhi, is_ldlo, next_is_ldhi, next_is_ldlo;
+
+        is_ldlo = reginfo.offset == 0;
+        is_ldhi = reginfo.offset == 2;
+
+        next_is_ldlo = nextreginfo.offset == 0;
+        next_is_ldhi = nextreginfo.offset == 2;
+
+        if (is_ldhi && next_is_ldlo && reginfo.fullWidthRegister == nextreginfo.fullWidthRegister) { // load 32 bit immediate idiom
+            il.AddInstruction(
+            il.SetRegister(4, 
+                reginfo.fullWidthRegister, 
+                il.Const(4, (instr.operands[2].imm << 16) | (next_instr.operands[2].imm))));
+            len += next_instrsz;
+            return status;
+        } else if (is_ldlo && next_is_ldhi && reginfo.fullWidthRegister == nextreginfo.fullWidthRegister) {
+            il.AddInstruction(
+            il.SetRegister(4, 
+                reginfo.fullWidthRegister, 
+                il.Const(4, (next_instr.operands[2].imm << 16) | (instr.operands[2].imm))));
+            len += next_instrsz;
+            return status;
+        } else {
+            if (reginfo.fullWidthRegister == reg) { // Full width reg load
+                il.AddInstruction(il.SetRegister(get_register_size(reg), reginfo.fullWidthRegister, il.Const(4, imm)));
+            }
+            else if (reginfo.offset == 0) { // low
+                il.AddInstruction(
+                    il.SetRegister(
+                        4, reginfo.fullWidthRegister, 
+                        il.Or(4, 
+                            il.And(4, il.Register(4, reginfo.fullWidthRegister), il.Const(4, 0xffff0000)), 
+                            il.Const(2, imm))));
+            }
+            else if (reginfo.offset == 2) { // high
+                // FIXME: This does NOT follow spec, but is here to help the VSA understand
+                // when registers are being set in two .H loads. I have not seen an example of a .H load
+                // happening by iself/where the low bits weren't overwritten before the next read, but if that
+                // does happen, this will be !INCORRECT! il. The commented code below follows the spec.
+                // but outputs ugly il, and BN can't track the final value of the register.
+                il.AddInstruction(il.SetRegister(4, reginfo.fullWidthRegister, il.Const(4, imm << 16)));
+                /*
+                il.AddInstruction(
+                    il.SetRegister(
+                        4, reginfo.fullWidthRegister, 
+                        il.Or(4,
+                            il.And(4, il.Register(4, reginfo.fullWidthRegister), il.Const(4, 0x0000ffff)),
+                            il.Const(4, imm << 16))));
+                */
+            }
+        }
+        break;
+    }
+    case OP_LDIMM: {
+        enum Register reg = instr.operands[0].reg;
+        int32_t imm = instr.operands[2].imm;
+        enum Operator op = instr.operands[1].operat;
+        switch (op) {
+        case OPER_EQ:
+            il.AddInstruction(il.SetRegister(4, reg, il.Const(4, imm)));
+            break;
+        case OPER_PLUSEQ:
+            il.AddInstruction(il.SetRegister(4, reg, il.Add(4, il.Register(4, reg), il.Const(4, imm))));
+            break;
+        }
+        break;
+    }
+    case OP_MV: {
+
+        enum Register dst = instr.operands[0].reg;
+        enum Register src = instr.operands[2].reg;
+
+        il.AddInstruction(
+                il.SetRegister(
+                    get_register_size(dst), 
+                    dst, 
+                    il.Register(
+                        get_register_size(src), src)));
+        break;
+    }
+    case OP_LINK: {
+        il.AddInstruction(il.Push(4, il.Register(4, REG_RETS)));
+        il.AddInstruction(il.Push(4, il.Register(4, REG_FP)));
+        il.AddInstruction(il.SetRegister(4, 
+                    REG_FP, 
+                    il.Register(4, REG_SP)));
+        il.AddInstruction(il.SetRegister(4, 
+                    REG_SP, 
+                    il.Sub(4, 
+                        il.Register(4, REG_SP), 
+                        il.Const(4, instr.operands[1].imm))));
+        break;
+    }
+    case OP_UNLINK: {
+        il.AddInstruction(il.SetRegister(4, 
+                    REG_SP, 
+                    il.Register(4, REG_FP)));
+        il.AddInstruction(il.SetRegister(4, REG_FP, il.Pop(4)));
+        il.AddInstruction(il.SetRegister(4, REG_RETS, il.Pop(4)));
+        break;
+    }
+    case OP_LD: {
+        enum Register dst = instr.operands[0].reg;
+        struct MemAccess mem_src = instr.operands[2].mem_access;
+        enum Register src = mem_src.ptr_reg;
+
+        ExprId load_il;
+        ExprId target_il;
+
+
+        if (mem_src.mode == MEM_REGOFF) {
+            target_il = il.Add(4, il.Register(get_register_size(src), src), il.Const(4, mem_src.offset));
+        } else {
+            target_il = il.Register(get_register_size(src), src);
+        }
+
+        if (instr.operands[2].flags.sign_extended) {
+            load_il = il.SignExtend(
+                get_register_size(dst),
+                il.Load(
+                    mem_src.width, 
+                    target_il));
+
+        } else if (instr.operands[2].flags.zero_extended) {
+            load_il = il.ZeroExtend(
+                get_register_size(dst),
+                il.Load(
+                    mem_src.width, 
+                    target_il));
+        } else {
+            load_il = il.Load(mem_src.width, target_il);
+        }
+        
+        switch (mem_src.mode) {
+        case MEM_REGOFF:
+        case MEM_REG:
+            il.AddInstruction(
+                il.SetRegister(
+                    get_register_size(dst), 
+                    dst, 
+                    load_il));
+            break;
+        case MEM_REGIMM:
+            il.AddInstruction(
+                il.SetRegister(
+                    get_register_size(dst), 
+                    dst, 
+                    load_il));
+
+            il.AddInstruction(il.SetRegister(
+                get_register_size(src), 
+                src, 
+                il.Add(
+                    get_register_size(src), 
+                    il.Register(get_register_size(src), src), 
+                    il.Const(1, mem_src.idx_imm))));
+            break;
+        }
+        break;
+    }
+    case OP_ST: {
+        enum Register src = instr.operands[2].reg;
+        struct MemAccess mem_dst = instr.operands[0].mem_access;
+        enum Register dst = mem_dst.ptr_reg;
+
+        ExprId target_il;
+
+        if (mem_dst.mode == MEM_REGOFF) {
+            target_il = il.Add(4, il.Register(get_register_size(dst), dst), il.Const(4, mem_dst.offset));
+        } else {
+            target_il = il.Register(get_register_size(dst), dst);
+        }
+        switch (mem_dst.mode) {
+        case MEM_REG:
+        case MEM_REGOFF:
+            il.AddInstruction(
+                il.Store(
+                    mem_dst.width,
+                    target_il, 
+                    il.Register(get_register_size(src), src)));
+            break;
+        case MEM_REGIMM:
+            il.AddInstruction(
+                il.Store(
+                    mem_dst.width,
+                    target_il, 
+                    il.Register(get_register_size(src), src)));
+
+            il.AddInstruction(il.SetRegister(
+                get_register_size(dst), 
+                dst, 
+                il.Add(
+                    get_register_size(dst), 
+                    il.Register(get_register_size(dst), dst), 
+                    il.Const(1, mem_dst.idx_imm))));
+            break;
+        }
+        break;
+    }
+    case OP_LDREG3: {
+        enum Register dst = instr.operands[0].reg;
+        enum Register src0 = instr.operands[2].reg;
+        enum Register src1 = instr.operands[4].reg;
+        enum Operator op = instr.operands[3].operat;
+
+        switch (op) {
+        case OPER_MINUS:
+            il.AddInstruction(il.SetRegister(4,
+                        dst,
+                        il.Sub(4, 
+                            il.Register(4, src0),
+                            il.Register(4, src1))));
+            break;
+        case OPER_OR:
+            il.AddInstruction(il.SetRegister(4,
+                        dst,
+                        il.Or(4, 
+                            il.Register(4, src0),
+                            il.Register(4, src1))));
+            break;
+        case OPER_AND:
+            il.AddInstruction(il.SetRegister(4,
+                        dst,
+                        il.And(4, 
+                            il.Register(4, src0),
+                            il.Register(4, src1))));
+            break;
+        case OPER_XOR:
+            il.AddInstruction(il.SetRegister(4,
+                        dst,
+                        il.Xor(4, 
+                            il.Register(4, src0),
+                            il.Register(4, src1))));
+            break;
+        case OPER_PLUS:
+            il.AddInstruction(il.SetRegister(4,
+                        dst,
+                        il.Add(4, 
+                            il.Register(4, src0),
+                            il.Register(4, src1))));
+            break;
+        }
+        break;
+    }
+    case OP_ALUADDSHIFTED: {
+        enum Register dst = instr.operands[0].reg;
+        enum Register src0 = instr.operands[2].reg;
+        enum Register src1 = instr.operands[4].reg;
+        enum Operator op = instr.operands[3].operat;
+        il.AddInstruction(il.SetRegister(4,
+                    dst,
+                    il.Add(4, 
+                        il.Register(4, src0),
+                        il.ShiftLeft(4, 
+                            il.Register(4, src1), 
+                            il.Const(1, instr.operands[6].imm)))));
+        break;
+    }
+    case OP_CCMOVE: {
+        enum Register dst = instr.operands[2].reg;
+        enum Register src = instr.operands[4].reg;
+        ExprId condition = instr.operands[1].flags.cc_inverted ?  il.Not(1, il.Flag(IL_FLAG_CC)) : il.Flag(IL_FLAG_CC);
+
+	    BNLowLevelILLabel trueLabel = LowLevelILLabel();
+	    BNLowLevelILLabel falseLabel = LowLevelILLabel();
+        il.AddInstruction(il.If(condition, trueLabel, falseLabel));
+        il.MarkLabel(trueLabel);
+        il.AddInstruction(il.SetRegister(
+                    get_register_size(dst), 
+                    dst, 
+                    il.Register(get_register_size(src), src)));
+        il.MarkLabel(falseLabel);
+
+        break;
+    }
+    case OP_LSETUP: {
+        // LOOPSETUP (loop_start, loop_end) LCx (= Px (>> 1))
+        // loop_start:
+        // for (int i = 0; i < LCx; i++) {
+        //     code here;
+        // loop_end: 
+        // }
+        
+        // BNLowLevelILLabel loopStart, loopBody, loopExit;
+
+        int loopStart = instr.operands[2].imm + addr;
+        int loopEnd = instr.operands[4].imm + addr;
+        enum Register loop_count_reg = instr.operands[6].reg;
+
+        if (instr.operand_count == 9) {
+            il.AddInstruction(il.SetRegister(4, loop_count_reg, il.Register(4, instr.operands[8].reg)));
+        } else if (instr.operand_count == 11) {
+            il.AddInstruction(il.SetRegister(4, 
+                        loop_count_reg, 
+                        il.LogicalShiftRight(4,
+                            il.Register(4, instr.operands[8].reg), 
+                            il.Const(1, 1))));
+        }
+
+        this->has_loop = true;
+        this->next_loopend = loopEnd;
+        this->next_loopstart = loopStart;
+        this->lc = loop_count_reg;
+        /* works but doesn't just loops in place doing nothing
+        LowLevelILLabel startLabel;
+        LowLevelILLabel continueLabel;
+        LowLevelILLabel doneLabel;
+
+        il.AddInstruction(il.Goto(startLabel));
+        il.MarkLabel(startLabel);
+        il.AddInstruction(il.If(
+                    il.CompareNotEqual(4, il.Register(4, loop_count_reg), il.Const(4, 0)),
+                    continueLabel, 
+                    doneLabel));
+        
+        il.MarkLabel(continueLabel);
+        il.AddInstruction(il.SetRegister(4, loop_count_reg, il.Sub(4, il.Register(4, loop_count_reg), il.Const(1, 1))));
+        il.AddInstruction(il.Goto(startLabel));
+        il.MarkLabel(doneLabel);
+        */
+        break;
+    }
+    }
+    // FIXME: why isn't this doing what its supposed to? just destroys control flow
+    /*
+    if (this->has_loop) {
+        if (this->next_loopstart == addr) {
+            LowLevelILLabel startLabel;
+            il.AddInstruction(il.Goto(startLabel));
+            il.MarkLabel(startLabel);
+        }
+        if (this->next_loopend == addr) {
+            LowLevelILLabel falseLabel, trueLabel;
+            ExprId cond = il.CompareNotEqual(4, il.Register(4, this->lc), il.Const(1, 0));
+            il.AddInstruction(il.SetRegister(4, this->lc, il.Sub(4, il.Register(4, this->lc), il.Const(1, 1))));
+            il.AddInstruction(il.If(cond, 
+                        trueLabel,
+                        falseLabel));
+            il.MarkLabel(trueLabel);
+            il.AddInstruction(il.Jump(il.ConstPointer(4, this->next_loopstart)));
+            il.MarkLabel(falseLabel);
+            this->next_loopend = 0;
+            this->next_loopstart = 0;
+            this->has_loop = false;
+        }
+    }
+    */
+    return status;
+}
+
+class BlackfinLinuxCallingConvention: public CallingConvention
+{
+public:
+	BlackfinLinuxCallingConvention(Architecture* arch): CallingConvention(arch, "blackfin-linux")
+	{
+	}
+
+	virtual vector<uint32_t> GetIntegerArgumentRegisters() override
+	{
+		return vector<uint32_t>{
+			REG_R0, REG_R1, REG_R2
+            // the rest on the stack
+		};
+	}
+
+	virtual vector<uint32_t> GetCallerSavedRegisters() override
+	{
+		return vector<uint32_t>{
+            REG_R0
+		};
+	}
+
+
+	virtual vector<uint32_t> GetCalleeSavedRegisters() override
+	{
+		return vector<uint32_t>{ 
+            REG_R1, REG_R2, REG_R3, REG_R4, REG_R5, REG_R6, REG_R7,
+            REG_P0, REG_P1, REG_P2, REG_P3, REG_P4, REG_P5, 
+            REG_FP, REG_RETS
+        };
+	}
+
+	virtual uint32_t GetIntegerReturnValueRegister() override
+	{
+		return REG_R0;
+	}
+
+	virtual bool IsEligibleForHeuristics() override
+	{
+		return false;
+	}
+    
+    virtual bool IsStackReservedForArgumentRegisters() override
+	{
+		return true;
+	}
+};
 
 extern "C" {
     BN_DECLARE_CORE_ABI_VERSION
@@ -582,6 +1235,14 @@ extern "C" {
     {
         BinaryNinja::Architecture *bfin = new BlackfinArchitecture("blackfin", BNEndianness::LittleEndian);
         BinaryNinja::Architecture::Register(bfin);
+
+        Ref<CallingConvention> conv;
+        conv = new BlackfinLinuxCallingConvention(bfin);
+	    bfin->RegisterCallingConvention(conv);
+	    bfin->SetDefaultCallingConvention(conv);
+	    bfin->SetCdeclCallingConvention(conv);
+	    bfin->SetFastcallCallingConvention(conv);
+	    bfin->SetStdcallCallingConvention(conv);
         return true;
     }
 }

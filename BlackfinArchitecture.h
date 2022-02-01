@@ -4,6 +4,7 @@
 #include "arch_blackfin.h"
 
 #define IL_FLAG_N 0
+#define IL_FLAG_CC 1
 #define IL_FLAG_Z 2
 #define IL_FLAG_C 4
 #define IL_FLAG_V 6
@@ -12,6 +13,7 @@
 #define IL_FLAGWRITE_NONE 0
 #define IL_FLAGWRITE_ALL 1
 #define IL_FLAGWRITE_NZ 2
+#define IL_FLAGWRITE_CC 3
 
 class BlackfinArchitecture : public BinaryNinja::Architecture {
 public:
@@ -37,9 +39,14 @@ public:
     virtual int Disassemble(uint8_t *data, uint64_t addr, size_t maxLen, blackfin::Instruction &result);
     virtual bool GetInstructionText(const uint8_t *data, uint64_t addr, size_t &len, std::vector<BinaryNinja::InstructionTextToken>& result) override;
     virtual bool GetInstructionInfo(const uint8_t *data, uint64_t addr, size_t maxLen, BinaryNinja::InstructionInfo &result) override;
+    virtual bool GetInstructionLowLevelIL(const uint8_t *data, uint64_t addr, size_t &len, BinaryNinja::LowLevelILFunction &il) override;
     virtual size_t GetDefaultIntegerSize() const override;
     virtual size_t GetInstructionAlignment() const override;
     virtual size_t GetMaxInstructionLength() const override;
 private:
     BNEndianness endian;
+    uint64_t next_loopend;
+    uint64_t next_loopstart;
+    enum Register lc;
+    bool has_loop;
 };
