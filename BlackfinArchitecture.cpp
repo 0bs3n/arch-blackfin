@@ -707,7 +707,7 @@ BlackfinArchitecture::GetInstructionLowLevelIL(const uint8_t *data, uint64_t add
     case OP_ALU2OP: {
         struct InstructionOperand dst = instr.operands[0];
         enum Operator op = instr.operands[1].operat;
-        struct InstructionOperand src = instr.operands[0];
+        struct InstructionOperand src = instr.operands[2];
         int src_width = GetRegisterInfo(src.reg).size;
 
         ExprId src_il;
