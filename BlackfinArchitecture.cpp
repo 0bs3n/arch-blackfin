@@ -3,6 +3,7 @@
 #include "binaryninjacore.h"
 #include "lowlevelilinstruction.h"
 #include "arch_blackfin.h"
+#include "syscallent.h"
 #include "Disassembler.h"
 #include <string.h>
 
@@ -45,6 +46,130 @@ size_t BlackfinArchitecture::GetInstructionAlignment() const
 size_t BlackfinArchitecture::GetMaxInstructionLength() const
 {
     return 8;
+}
+
+string 
+BlackfinArchitecture::GetIntrinsicName(uint32_t intrinsic)
+{
+    switch (intrinsic)  {
+    case BFIN_INTRINSIC_LSETUP:
+        return "LoopSetup";
+    case BFIN_INTRINSIC_RAISE:
+        return "Raise";
+    case BFIN_INTRINSIC_SYSCALL0:
+        return "SysCall";
+    case BFIN_INTRINSIC_SYSCALL1:
+        return "SysCall";
+    case BFIN_INTRINSIC_SYSCALL2:
+        return "SysCall";
+    case BFIN_INTRINSIC_SYSCALL3:
+        return "SysCall";
+    case BFIN_INTRINSIC_SYSCALL4:
+        return "SysCall";
+    case BFIN_INTRINSIC_SYSCALL5:
+        return "SysCall";
+    case BFIN_INTRINSIC_SYSCALL6:
+        return "SysCall";
+    default:
+        return "";
+    }
+}
+
+vector<uint32_t> 
+BlackfinArchitecture::GetAllIntrinsics()
+{
+    return vector<uint32_t> {
+        BFIN_INTRINSIC_LSETUP,
+        BFIN_INTRINSIC_RAISE,
+        BFIN_INTRINSIC_SYSCALL0,
+        BFIN_INTRINSIC_SYSCALL1,
+        BFIN_INTRINSIC_SYSCALL2,
+        BFIN_INTRINSIC_SYSCALL3,
+        BFIN_INTRINSIC_SYSCALL4,
+        BFIN_INTRINSIC_SYSCALL5,
+        BFIN_INTRINSIC_SYSCALL6,
+    };
+}
+
+vector<NameAndType> BlackfinArchitecture::GetIntrinsicInputs(uint32_t intrinsic)
+{
+    switch (intrinsic)
+    {
+    case BFIN_INTRINSIC_LSETUP:
+        return {
+            NameAndType("loopStart", Type::PointerType(4, Confidence(Type::VoidType(), 0), Confidence(false), Confidence(false), PointerReferenceType)),
+            NameAndType("loopEnd", Type::PointerType(4, Confidence(Type::VoidType(), 0), Confidence(false), Confidence(false), PointerReferenceType)),
+            NameAndType("loopCount", Type::IntegerType(4, false))
+        };
+    case BFIN_INTRINSIC_RAISE:
+        return {
+            NameAndType("interruptNum", Type::IntegerType(4, false))
+        };
+    case BFIN_INTRINSIC_SYSCALL0:
+        return {
+            NameAndType("SyscallNo", Type::IntegerType(4, false)),
+        };
+    case BFIN_INTRINSIC_SYSCALL1:
+        return {
+            NameAndType("SyscallNo", Type::IntegerType(4, false)),
+            NameAndType("arg1", Type::IntegerType(4, false)),
+        };
+    case BFIN_INTRINSIC_SYSCALL2:
+        return {
+            NameAndType("SyscallNo", Type::IntegerType(4, false)),
+            NameAndType("arg1", Type::IntegerType(4, false)),
+            NameAndType("arg2", Type::IntegerType(4, false)),
+        };
+    case BFIN_INTRINSIC_SYSCALL3:
+        return {
+            NameAndType("SyscallNo", Type::IntegerType(4, false)),
+            NameAndType("arg1", Type::IntegerType(4, false)),
+            NameAndType("arg2", Type::IntegerType(4, false)),
+            NameAndType("arg3", Type::IntegerType(4, false)),
+        };
+    case BFIN_INTRINSIC_SYSCALL4:
+        return {
+            NameAndType("SyscallNo", Type::IntegerType(4, false)),
+            NameAndType("arg1", Type::IntegerType(4, false)),
+            NameAndType("arg2", Type::IntegerType(4, false)),
+            NameAndType("arg3", Type::IntegerType(4, false)),
+            NameAndType("arg4", Type::IntegerType(4, false)),
+        };
+    case BFIN_INTRINSIC_SYSCALL5:
+        return {
+            NameAndType("SyscallNo", Type::IntegerType(4, false)),
+            NameAndType("arg1", Type::IntegerType(4, false)),
+            NameAndType("arg2", Type::IntegerType(4, false)),
+            NameAndType("arg3", Type::IntegerType(4, false)),
+            NameAndType("arg4", Type::IntegerType(4, false)),
+            NameAndType("arg5", Type::IntegerType(4, false)),
+        };
+    case BFIN_INTRINSIC_SYSCALL6:
+        return {
+            NameAndType("SyscallNo", Type::IntegerType(4, false)),
+            NameAndType("arg1", Type::IntegerType(4, false)),
+            NameAndType("arg2", Type::IntegerType(4, false)),
+            NameAndType("arg3", Type::IntegerType(4, false)),
+            NameAndType("arg4", Type::IntegerType(4, false)),
+            NameAndType("arg5", Type::IntegerType(4, false)),
+            NameAndType("arg6", Type::IntegerType(4, false)),
+        };
+    default:
+        return vector<NameAndType>();
+    }
+}
+
+vector<Confidence<Ref<Type>>> BlackfinArchitecture::GetIntrinsicOutputs(uint32_t intrinsic)
+{
+    switch (intrinsic)
+    {
+    case BFIN_INTRINSIC_LSETUP:
+        return vector<Confidence<Ref<Type>>>();
+    case BFIN_INTRINSIC_RAISE:
+        return vector<Confidence<Ref<Type>>>();
+    default:
+        return vector<Confidence<Ref<Type>>>();
+    }
 }
 
 std::string BlackfinArchitecture::GetFlagName(uint32_t flag) { 
@@ -664,6 +789,16 @@ BlackfinArchitecture::GetInstructionLowLevelIL(const uint8_t *data, uint64_t add
     case OP_JMPREGREL:
         il.AddInstruction(il.Jump(il.Register(4, instr.operands[1].reg)));
         break;
+    case OP_POP: {
+        enum Register reg = instr.operands[0].reg;
+        il.AddInstruction(il.SetRegister(get_register_size(reg), reg, il.Pop(get_register_size(reg))));
+        break;
+    }
+    case OP_PUSH: {
+        enum Register reg = instr.operands[2].reg;
+        il.AddInstruction(il.Push(4, il.Register(get_register_size(reg), reg)));
+        break;
+    }
     case OP_POPMULT:
         if (instr.operands[0].cls == REG_RANGE) {
             enum Register reg_hi = instr.operands[0].r_r.top;
@@ -1130,10 +1265,18 @@ BlackfinArchitecture::GetInstructionLowLevelIL(const uint8_t *data, uint64_t add
                             il.Const(1, 1))));
         }
 
+        il.AddInstruction(il.Intrinsic({}, BFIN_INTRINSIC_LSETUP, {
+                    il.Const(4, loopStart),
+                    il.Const(4, loopEnd),
+                    il.Register(4, loop_count_reg)
+                }));
+        
+        /*
         this->has_loop = true;
         this->next_loopend = loopEnd;
         this->next_loopstart = loopStart;
         this->lc = loop_count_reg;
+        */
         /* works but doesn't just loops in place doing nothing
         LowLevelILLabel startLabel;
         LowLevelILLabel continueLabel;
@@ -1153,6 +1296,24 @@ BlackfinArchitecture::GetInstructionLowLevelIL(const uint8_t *data, uint64_t add
         */
         break;
     }
+    case OP_RAISE:
+        int raise_no = instr.operands[1].imm;
+        // TODO: Syscalls must be implemented in the Plaftorm, not architecture, and there is no
+        // visibility into platform at the moment
+        if (raise_no == 0) { // Syscall
+            il.AddInstruction(il.Intrinsic({}, BFIN_INTRINSIC_SYSCALL6, {
+                        il.Register(4, REG_P0),
+                        il.Register(4, REG_R0),
+                        il.Register(4, REG_R1),
+                        il.Register(4, REG_R2),
+                        il.Register(4, REG_R3),
+                        il.Register(4, REG_R4),
+                        il.Register(4, REG_R5),
+                    }));
+        } else {
+            il.AddInstruction(il.Intrinsic({}, BFIN_INTRINSIC_RAISE, { il.Const(4, raise_no) }));
+        }
+        break;
     }
     // FIXME: why isn't this doing what its supposed to? just destroys control flow
     /*

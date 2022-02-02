@@ -15,6 +15,18 @@
 #define IL_FLAGWRITE_NZ 2
 #define IL_FLAGWRITE_CC 3
 
+enum BlackfinIntrinsic {
+    BFIN_INTRINSIC_LSETUP,
+    BFIN_INTRINSIC_RAISE,
+    BFIN_INTRINSIC_SYSCALL0,
+    BFIN_INTRINSIC_SYSCALL1,
+    BFIN_INTRINSIC_SYSCALL2,
+    BFIN_INTRINSIC_SYSCALL3,
+    BFIN_INTRINSIC_SYSCALL4,
+    BFIN_INTRINSIC_SYSCALL5,
+    BFIN_INTRINSIC_SYSCALL6
+};
+
 class BlackfinArchitecture : public BinaryNinja::Architecture {
 public:
     BlackfinArchitecture(const char *name, BNEndianness _endian);
@@ -43,6 +55,10 @@ public:
     virtual size_t GetDefaultIntegerSize() const override;
     virtual size_t GetInstructionAlignment() const override;
     virtual size_t GetMaxInstructionLength() const override;
+	virtual std::string GetIntrinsicName(uint32_t intrinsic) override;
+    virtual std::vector<uint32_t> GetAllIntrinsics() override;
+    virtual std::vector<BinaryNinja::NameAndType> GetIntrinsicInputs(uint32_t intrinsic) override;
+    virtual std::vector<BinaryNinja::Confidence<BinaryNinja::Ref<BinaryNinja::Type>>> GetIntrinsicOutputs(uint32_t intrinsic) override;
 private:
     BNEndianness endian;
     uint64_t next_loopend;
