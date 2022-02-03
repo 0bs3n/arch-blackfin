@@ -3,10 +3,13 @@
 
 bool Ptr2OpInstruction::Disassemble(uint16_t instructionWord, struct blackfin::Instruction &instr, bool parallel)
 {
-	int src = ((instructionWord >> PTR2op_src_bits) & PTR2op_dst_mask);
+    /* PTR2op
+    +---+---+---+---|---+---+---+---|---+---+---+---|---+---+---+---+
+    | 0 | 1 | 0 | 0 | 0 | 1 | 0 |.opc.......|.src.......|.dst.......|
+    +---+---+---+---|---+---+---+---|---+---+---+---|---+---+---+---+  */
+    int src = ((instructionWord >> PTR2op_src_bits) & PTR2op_dst_mask);
 	int opc = ((instructionWord >> PTR2op_opc_bits) & PTR2op_opc_mask);
 	int dst = ((instructionWord >> PTR2op_dst_bits) & PTR2op_dst_mask);
-
 
     // Register assignments
     switch (opc) {

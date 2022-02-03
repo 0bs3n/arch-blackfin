@@ -3,6 +3,10 @@
 
 bool ALU2opInstruction::Disassemble(uint16_t instructionWord, struct blackfin::Instruction &instr, bool parallel)
 {
+    /* ALU2op
+    +---+---+---+---|---+---+---+---|---+---+---+---|---+---+---+---+
+    | 0 | 1 | 0 | 0 | 0 | 0 |.opc...........|.src.......|.dst.......|
+    +---+---+---+---|---+---+---+---|---+---+---+---|---+---+---+---+  */
 	int src = ((instructionWord >> ALU2op_src_bits) & ALU2op_src_mask);
 	int opc = ((instructionWord >> ALU2op_opc_bits) & ALU2op_opc_mask);
 	int dst = ((instructionWord >> ALU2op_dst_bits) & ALU2op_dst_mask);
@@ -64,8 +68,8 @@ bool ALU2opInstruction::Disassemble(uint16_t instructionWord, struct blackfin::I
         instr.operands[1].operat = blackfin::OPER_EQ;
         instr.operands[2].cls = blackfin::REG;
 
-        if (opc == 10 || opc == 11) instr.operands[2].reg = dregs_lo(dst);
-        if (opc == 12 || opc == 13) instr.operands[2].reg = dregs_byte(dst);
+        if (opc == 10 || opc == 11) instr.operands[2].reg = dregs_lo(src);
+        if (opc == 12 || opc == 13) instr.operands[2].reg = dregs_byte(src);
 
         if (opc == 10) instr.operands[2].flags.sign_extended = true;
         if (opc == 11) instr.operands[2].flags.zero_extended = true;

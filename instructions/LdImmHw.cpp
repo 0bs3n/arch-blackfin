@@ -5,6 +5,12 @@ bool
 LdImmHwInstruction::Disassemble(uint16_t instructionWordHigh, uint16_t instructionWordLow, 
         struct blackfin::Instruction &instr, bool parallel) 
 {
+	/* LDIMMhalf
+	+---+---+---+---|---+---+---+---|---+---+---+---|---+---+---+---+
+	| 1 | 1 | 1 | 0 | 0 | 0 | 0 | 1 |.Z.|.H.|.S.|.grp...|.reg.......|
+	|.hword.........................................................|
+	+---+---+---+---|---+---+---+---|---+---+---+---|---+---+---+---+  */
+
 	int H = ((instructionWordHigh >> (LDIMMhalf_H_bits - 16)) & LDIMMhalf_H_mask);
 	int Z = ((instructionWordHigh >> (LDIMMhalf_Z_bits - 16)) & LDIMMhalf_Z_mask);
 	int S = ((instructionWordHigh >> (LDIMMhalf_S_bits - 16)) & LDIMMhalf_S_mask);
