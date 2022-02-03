@@ -177,7 +177,7 @@ std::string BlackfinArchitecture::GetFlagName(uint32_t flag) {
 	switch (flag)
 	{
     case IL_FLAG_CC:
-        return "CC";
+        return "cc";
 	case IL_FLAG_N:
 		return "n";
 	case IL_FLAG_Z:
@@ -198,7 +198,7 @@ std::string BlackfinArchitecture::GetFlagWriteTypeName(uint32_t flags) {
     	switch (flags)
 	{
 		case IL_FLAGWRITE_ALL: return "*";
-		case IL_FLAGWRITE_CC: return "CC";
+		case IL_FLAGWRITE_CC: return "cc";
 		case IL_FLAGWRITE_NZ: return "nz";
 		default:
 			return "";
@@ -274,9 +274,12 @@ size_t BlackfinArchitecture::GetFlagWriteLowLevelIL(BNLowLevelILOperation op, si
 }
 
 std::string BlackfinArchitecture::GetRegisterName(uint32_t reg) {
+    char *unkreg = (char *)malloc(0x40);
+    memset(unkreg, 0, 0x40);
     if (reg >= REG_RL0 && reg < REG_LASTREG) {
         return blackfin::get_register_name(static_cast<enum Register>(reg));
     } else {
+        BinaryNinja::LogInfo("unknown register! reg: %d", reg);
         return "unknown";
     }
 }
@@ -472,6 +475,15 @@ BNRegisterInfo BlackfinArchitecture::GetRegisterInfo(uint32_t reg)
     case REG_LH2:
     case REG_LH3:
         return RegisterInfo(blackfin::get_reg_for_reg_part(reg), 2, 2);
+    case REG_BR0:
+    case REG_BR1:
+    case REG_BR2:
+    case REG_BR3:
+    case REG_BR4:
+    case REG_BR5:
+    case REG_BR6:
+    case REG_BR7:
+        return RegisterInfo(blackfin::get_reg_for_reg_part(reg), 0, 1);
     case REG_CC:
         return RegisterInfo(reg, 0, 1);
     default:
@@ -586,8 +598,8 @@ bool BlackfinArchitecture::GetInstructionText(const uint8_t *data, uint64_t addr
             break;
 
         case blackfin::MEM_ACCESS:
-            if (operand.mem_access.width == 1) result.emplace_back(TextToken, "B");
-            if (operand.mem_access.width == 2) result.emplace_back(TextToken, "W");
+            if (operand.mem_access.width == 1) result.emplace_back(TextToken, "b");
+            if (operand.mem_access.width == 2) result.emplace_back(TextToken, "w");
             result.emplace_back(BeginMemoryOperandToken, "[");
             switch (operand.mem_access.mode) {
             case blackfin::MEM_REGMOD:
@@ -628,8 +640,8 @@ bool BlackfinArchitecture::GetInstructionText(const uint8_t *data, uint64_t addr
         default:
             return false;
         }
-        if (operand.flags.sign_extended) result.emplace_back(TextToken, " (X)");
-        if (operand.flags.zero_extended) result.emplace_back(TextToken, " (Z)");
+        if (operand.flags.sign_extended) result.emplace_back(TextToken, " (x)");
+        if (operand.flags.zero_extended) result.emplace_back(TextToken, " (z)");
     }
     if ((instr.operation == blackfin::OP_DSPALU || 
          instr.operation == blackfin::OP_DSPMAC || 
@@ -1296,11 +1308,13 @@ BlackfinArchitecture::GetInstructionLowLevelIL(const uint8_t *data, uint64_t add
         */
         break;
     }
-    case OP_RAISE:
+    case OP_RAISE: {
         int raise_no = instr.operands[1].imm;
         // TODO: Syscalls must be implemented in the Plaftorm, not architecture, and there is no
         // visibility into platform at the moment
         if (raise_no == 0) { // Syscall
+            il.AddInstruction(il.SystemCall());
+            /*
             il.AddInstruction(il.Intrinsic({}, BFIN_INTRINSIC_SYSCALL6, {
                         il.Register(4, REG_P0),
                         il.Register(4, REG_R0),
@@ -1310,8 +1324,37 @@ BlackfinArchitecture::GetInstructionLowLevelIL(const uint8_t *data, uint64_t add
                         il.Register(4, REG_R4),
                         il.Register(4, REG_R5),
                     }));
+            */
         } else {
             il.AddInstruction(il.Intrinsic({}, BFIN_INTRINSIC_RAISE, { il.Const(4, raise_no) }));
+        }
+        break;
+    }
+    case OP_MVSHIFTED:
+        // FIXME: this implementation is a little hard to follow, consider separating based on number of operands or something
+        enum Register dst = instr.operands[0].reg;
+        Operator op = instr.operands[1].operat;
+        int shift_amt = instr.operands[2].imm;
+        switch (op) {
+        case OPER_ASHIFTREQ:
+            il.AddInstruction(il.SetRegister(4, dst, il.ArithShiftRight(4, il.Register(4, dst), il.Const(4, shift_amt))));
+            break;
+        case OPER_LSHIFTREQ:
+            il.AddInstruction(il.SetRegister(4, dst, il.LogicalShiftRight(4, il.Register(4, dst), il.Const(4, shift_amt))));
+            break;
+        case OPER_LSHIFTLEQ:
+            il.AddInstruction(il.SetRegister(4, dst, il.ShiftLeft(4, il.Register(4, dst), il.Const(4, shift_amt))));
+            break;
+        case OPER_EQ: {
+            enum Register src = instr.operands[2].reg;
+            shift_amt = instr.operands[4].imm;
+            op = instr.operands[3].operat;
+            if (op == OPER_LSHIFTR)
+                il.AddInstruction(il.SetRegister(4, dst, il.LogicalShiftRight(4, il.Register(4, src), il.Const(4, shift_amt))));
+            else if (op == OPER_LSHIFTL)
+                il.AddInstruction(il.SetRegister(4, dst, il.ShiftLeft(4, il.Register(4, src), il.Const(4, shift_amt))));
+            break;
+        }
         }
         break;
     }
@@ -1341,6 +1384,53 @@ BlackfinArchitecture::GetInstructionLowLevelIL(const uint8_t *data, uint64_t add
     */
     return status;
 }
+
+class BlackfinLinuxSystemCallingConvention: public CallingConvention
+{
+public:
+	BlackfinLinuxSystemCallingConvention(Architecture* arch): CallingConvention(arch, "blackfin-linux-syscall")
+	{
+	}
+
+	virtual vector<uint32_t> GetIntegerArgumentRegisters() override
+	{
+		return vector<uint32_t>{
+			REG_P0, REG_R0, REG_R1, REG_R2, REG_R3, REG_R4, REG_R5
+		};
+	}
+
+	virtual vector<uint32_t> GetCallerSavedRegisters() override
+	{
+		return vector<uint32_t>{
+            REG_R0
+		};
+	}
+
+
+	virtual vector<uint32_t> GetCalleeSavedRegisters() override
+	{
+		return vector<uint32_t>{ 
+            REG_R1, REG_R2, REG_R3, REG_R4, REG_R5, REG_R6, REG_R7,
+            REG_P0, REG_P1, REG_P2, REG_P3, REG_P4, REG_P5, 
+            REG_FP, REG_RETS
+        };
+	}
+
+	virtual uint32_t GetIntegerReturnValueRegister() override
+	{
+		return REG_R0;
+	}
+
+	virtual bool IsEligibleForHeuristics() override
+	{
+		return false;
+	}
+    
+    virtual bool IsStackReservedForArgumentRegisters() override
+	{
+		return false;
+	}
+};
 
 class BlackfinLinuxCallingConvention: public CallingConvention
 {
@@ -1404,6 +1494,11 @@ extern "C" {
 	    bfin->SetCdeclCallingConvention(conv);
 	    bfin->SetFastcallCallingConvention(conv);
 	    bfin->SetStdcallCallingConvention(conv);
+
+        Ref<CallingConvention> syscall_conv;
+        syscall_conv = new BlackfinLinuxSystemCallingConvention(bfin);
+	    bfin->RegisterCallingConvention(syscall_conv);
+
         return true;
     }
 }
