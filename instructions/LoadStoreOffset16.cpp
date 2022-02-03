@@ -28,7 +28,7 @@ LoadStoreOffset16Instruction::Disassemble(uint16_t instructionWordHigh, uint16_t
         // dreg = [preg + offset]
         instr.operands[0] = { .cls = REG, .reg = dregs(reg) };
         instr.operands[2] = { .cls = MEM_ACCESS, .mem_access = {
-            .mode = MEM_REGIMM,
+            .mode = MEM_REGOFF,
             .ptr_reg = pregs(ptr),
             .offset = imm16s4(offset),
             .oper = OPER_PLUS,
@@ -40,7 +40,7 @@ LoadStoreOffset16Instruction::Disassemble(uint16_t instructionWordHigh, uint16_t
         // preg = [preg + offset]
         instr.operands[0] = { .cls = REG, .reg = pregs(reg) };
         instr.operands[2] = { .cls = MEM_ACCESS, .mem_access = {
-            .mode = MEM_REGIMM,
+            .mode = MEM_REGOFF,
             .ptr_reg = pregs(ptr),
             .offset = imm16s4(offset),
             .oper = OPER_PLUS,
@@ -52,7 +52,7 @@ LoadStoreOffset16Instruction::Disassemble(uint16_t instructionWordHigh, uint16_t
         // dreg = W[preg + offset] (Z)
         instr.operands[0] = { .cls = REG, .reg = dregs(reg) };
         instr.operands[2] = { .cls = MEM_ACCESS, .mem_access = {
-            .mode = MEM_REGIMM,
+            .mode = MEM_REGOFF,
             .ptr_reg = pregs(ptr),
             .offset = imm16s2(offset),
             .oper = OPER_PLUS,
@@ -65,7 +65,7 @@ LoadStoreOffset16Instruction::Disassemble(uint16_t instructionWordHigh, uint16_t
         // dreg = W[preg + offset] (X)
         instr.operands[0] = { .cls = REG, .reg = dregs(reg) };
         instr.operands[2] = { .cls = MEM_ACCESS, .mem_access = {
-            .mode = MEM_REGIMM,
+            .mode = MEM_REGOFF,
             .ptr_reg = pregs(ptr),
             .offset = imm16s2(offset),
             .oper = OPER_PLUS,
@@ -78,7 +78,7 @@ LoadStoreOffset16Instruction::Disassemble(uint16_t instructionWordHigh, uint16_t
         // dreg = B[preg + offset] (Z)
         instr.operands[0] = { .cls = REG, .reg = dregs(reg) };
         instr.operands[2] = { .cls = MEM_ACCESS, .mem_access = {
-            .mode = MEM_REGIMM,
+            .mode = MEM_REGOFF,
             .ptr_reg = pregs(ptr),
             .offset = imm16(offset),
             .oper = OPER_PLUS,
@@ -91,7 +91,7 @@ LoadStoreOffset16Instruction::Disassemble(uint16_t instructionWordHigh, uint16_t
         // dreg = B[preg + offset] (X)
         instr.operands[0] = { .cls = REG, .reg = dregs(reg) };
         instr.operands[2] = { .cls = MEM_ACCESS, .mem_access = {
-            .mode = MEM_REGIMM,
+            .mode = MEM_REGOFF,
             .ptr_reg = pregs(ptr),
             .offset = imm16(offset),
             .oper = OPER_PLUS,
@@ -103,7 +103,7 @@ LoadStoreOffset16Instruction::Disassemble(uint16_t instructionWordHigh, uint16_t
 	{
         // [preg + offset] = dreg
         instr.operands[0] = { .cls = MEM_ACCESS, .mem_access = {
-            .mode = MEM_REGIMM,
+            .mode = MEM_REGOFF,
             .ptr_reg = pregs(ptr),
             .offset = imm16s4(offset),
             .oper = OPER_PLUS,
@@ -115,7 +115,7 @@ LoadStoreOffset16Instruction::Disassemble(uint16_t instructionWordHigh, uint16_t
 	{
         // [preg + offset] = preg
         instr.operands[0] = { .cls = MEM_ACCESS, .mem_access = {
-            .mode = MEM_REGIMM,
+            .mode = MEM_REGOFF,
             .ptr_reg = pregs(ptr),
             .offset = imm16s4(offset),
             .oper = OPER_PLUS,
@@ -127,7 +127,7 @@ LoadStoreOffset16Instruction::Disassemble(uint16_t instructionWordHigh, uint16_t
 	{
         // W[preg + offset] = dreg
         instr.operands[0] = { .cls = MEM_ACCESS, .mem_access = {
-            .mode = MEM_REGIMM,
+            .mode = MEM_REGOFF,
             .ptr_reg = pregs(ptr),
             .offset = imm16s2(offset),
             .oper = OPER_PLUS,
@@ -139,7 +139,7 @@ LoadStoreOffset16Instruction::Disassemble(uint16_t instructionWordHigh, uint16_t
 	{
         // B[preg + offset] = dreg
         instr.operands[0] = { .cls = MEM_ACCESS, .mem_access = {
-            .mode = MEM_REGIMM,
+            .mode = MEM_REGOFF,
             .ptr_reg = pregs(ptr),
             .offset = imm16(offset),
             .oper = OPER_PLUS,
