@@ -871,6 +871,7 @@ Dsp32ALUInstruction::Disassemble(uint16_t instructionWordHigh, uint16_t instruct
 	}
 	else if (aop == 1 && aopcde == 7)
 	{
+        instr.operation = OP_MIN;
         instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst0) };
         instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
         instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_MIN };
@@ -880,6 +881,7 @@ Dsp32ALUInstruction::Disassemble(uint16_t instructionWordHigh, uint16_t instruct
 	}
 	else if (aop == 0 && aopcde == 7)
 	{
+        instr.operation = OP_MAX;
         instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst0) };
         instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
         instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_MAX };
@@ -898,6 +900,7 @@ Dsp32ALUInstruction::Disassemble(uint16_t instructionWordHigh, uint16_t instruct
 	}
 	else if (aop == 1 && aopcde == 6)
 	{
+        instr.operation = OP_MIN;
         instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst0) };
         instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
         instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_MIN };
@@ -909,6 +912,7 @@ Dsp32ALUInstruction::Disassemble(uint16_t instructionWordHigh, uint16_t instruct
 	}
 	else if (aop == 0 && aopcde == 6)
 	{
+        instr.operation = OP_MAX;
         instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst0) };
         instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
         instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_MAX };

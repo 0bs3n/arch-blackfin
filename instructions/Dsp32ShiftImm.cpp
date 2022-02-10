@@ -68,6 +68,7 @@ Dsp32ShiftImmInstruction::Disassemble(uint16_t instructionWordHigh, uint16_t ins
 	}
 	else if (sop == 2 && sopcde == 3 && HLs == 1)
 	{
+        instr.operation = OP_ROT;
         instr.operands[instr.operand_count++] = {.cls = REG, .reg = REG_A1 };
         instr.operands[instr.operand_count++] = {.cls = OPERATOR, .operat = OPER_EQ };
         instr.operands[instr.operand_count++] = {.cls = MNEMOMIC, .mnemonic = OL_ROT };
@@ -125,6 +126,7 @@ Dsp32ShiftImmInstruction::Disassemble(uint16_t instructionWordHigh, uint16_t ins
 	}
 	else if (sop == 2 && sopcde == 3 && HLs == 0)
 	{
+        instr.operation = OP_ROT;
         instr.operands[instr.operand_count++] = {.cls = REG, .reg = REG_A0 };
         instr.operands[instr.operand_count++] = {.cls = OPERATOR, .operat = OPER_EQ };
         instr.operands[instr.operand_count++] = {.cls = MNEMOMIC, .mnemonic = OL_ROT };
@@ -214,6 +216,7 @@ Dsp32ShiftImmInstruction::Disassemble(uint16_t instructionWordHigh, uint16_t ins
 	}
 	else if (sop == 3 && sopcde == 2)
 	{
+        instr.operation = OP_ROT;
         instr.operands[instr.operand_count++] = {.cls = REG, .reg = dregs(dst0) };
         instr.operands[instr.operand_count++] = {.cls = OPERATOR, .operat = OPER_EQ };
         instr.operands[instr.operand_count++] = {.cls = MNEMOMIC, .mnemonic = OL_ROT };

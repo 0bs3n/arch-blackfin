@@ -130,6 +130,7 @@ Dsp32ShiftInstruction::Disassemble(uint16_t instructionWordHigh, uint16_t instru
 	}
 	else if (sop == 2 && sopcde == 3)
 	{
+        instr.operation = OP_ROT;
         instr.operands[instr.operand_count++] = { .cls = REG, .reg = acc01 };
         instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
         instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_ROT };
@@ -139,6 +140,9 @@ Dsp32ShiftInstruction::Disassemble(uint16_t instructionWordHigh, uint16_t instru
 	}
 	else if (sop == 3 && sopcde == 3)
 	{
+        // FIXME: This isn't an actual instruction, why was this in libopcodes?
+        // should we keep it in?
+        instr.operation = OP_ROT;
         instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst0) };
         instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
         instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_ROT };
@@ -201,6 +205,7 @@ Dsp32ShiftInstruction::Disassemble(uint16_t instructionWordHigh, uint16_t instru
 	}
 	else if (sop == 3 && sopcde == 2)
 	{
+        instr.operation = OP_ROT;
         instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst0) };
         instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
         instr.operands[instr.operand_count++] = { .cls = MNEMOMIC, .mnemonic = OL_ROT };
