@@ -3,17 +3,26 @@
 #include "binaryninjaapi.h"
 #include "arch_blackfin.h"
 
-#define IL_FLAG_N 0
-#define IL_FLAG_CC 1
-#define IL_FLAG_Z 2
-#define IL_FLAG_C 4
-#define IL_FLAG_V 6
-#define IL_FLAG_Q 8
+#define IL_FLAG_AC0 0
+#define IL_FLAG_AC1 1
+#define IL_FLAG_AN 2
+#define IL_FLAG_AQ 3
+#define IL_FLAG_AV0 4
+#define IL_FLAG_AVS0 5
+#define IL_FLAG_AV1 6
+#define IL_FLAG_AVS1 7
+#define IL_FLAG_AZ 8
+#define IL_FLAG_CC 9
+#define IL_FLAG_V 10
+#define IL_FLAG_VS 11
+
 
 #define IL_FLAGWRITE_NONE 0
 #define IL_FLAGWRITE_ALL 1
-#define IL_FLAGWRITE_NZ 2
-#define IL_FLAGWRITE_CC 3
+#define IL_FLAGWRITE_A0 2
+#define IL_FLAGWRITE_A1 3
+#define IL_FLAGWRITE_DR 4
+#define IL_FLAGWRITE_CC 5
 
 enum BlackfinIntrinsic {
     BFIN_INTRINSIC_LSETUP,

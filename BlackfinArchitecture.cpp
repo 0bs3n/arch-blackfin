@@ -55,20 +55,6 @@ BlackfinArchitecture::GetIntrinsicName(uint32_t intrinsic)
         return "LoopSetup";
     case BFIN_INTRINSIC_RAISE:
         return "Raise";
-    case BFIN_INTRINSIC_SYSCALL0:
-        return "SysCall";
-    case BFIN_INTRINSIC_SYSCALL1:
-        return "SysCall";
-    case BFIN_INTRINSIC_SYSCALL2:
-        return "SysCall";
-    case BFIN_INTRINSIC_SYSCALL3:
-        return "SysCall";
-    case BFIN_INTRINSIC_SYSCALL4:
-        return "SysCall";
-    case BFIN_INTRINSIC_SYSCALL5:
-        return "SysCall";
-    case BFIN_INTRINSIC_SYSCALL6:
-        return "SysCall";
     default:
         return "";
     }
@@ -79,14 +65,7 @@ BlackfinArchitecture::GetAllIntrinsics()
 {
     return vector<uint32_t> {
         BFIN_INTRINSIC_LSETUP,
-        BFIN_INTRINSIC_RAISE,
-        BFIN_INTRINSIC_SYSCALL0,
-        BFIN_INTRINSIC_SYSCALL1,
-        BFIN_INTRINSIC_SYSCALL2,
-        BFIN_INTRINSIC_SYSCALL3,
-        BFIN_INTRINSIC_SYSCALL4,
-        BFIN_INTRINSIC_SYSCALL5,
-        BFIN_INTRINSIC_SYSCALL6,
+        BFIN_INTRINSIC_RAISE
     };
 }
 
@@ -103,55 +82,6 @@ vector<NameAndType> BlackfinArchitecture::GetIntrinsicInputs(uint32_t intrinsic)
     case BFIN_INTRINSIC_RAISE:
         return {
             NameAndType("interruptNum", Type::IntegerType(4, false))
-        };
-    case BFIN_INTRINSIC_SYSCALL0:
-        return {
-            NameAndType("SyscallNo", Type::IntegerType(4, false)),
-        };
-    case BFIN_INTRINSIC_SYSCALL1:
-        return {
-            NameAndType("SyscallNo", Type::IntegerType(4, false)),
-            NameAndType("arg1", Type::IntegerType(4, false)),
-        };
-    case BFIN_INTRINSIC_SYSCALL2:
-        return {
-            NameAndType("SyscallNo", Type::IntegerType(4, false)),
-            NameAndType("arg1", Type::IntegerType(4, false)),
-            NameAndType("arg2", Type::IntegerType(4, false)),
-        };
-    case BFIN_INTRINSIC_SYSCALL3:
-        return {
-            NameAndType("SyscallNo", Type::IntegerType(4, false)),
-            NameAndType("arg1", Type::IntegerType(4, false)),
-            NameAndType("arg2", Type::IntegerType(4, false)),
-            NameAndType("arg3", Type::IntegerType(4, false)),
-        };
-    case BFIN_INTRINSIC_SYSCALL4:
-        return {
-            NameAndType("SyscallNo", Type::IntegerType(4, false)),
-            NameAndType("arg1", Type::IntegerType(4, false)),
-            NameAndType("arg2", Type::IntegerType(4, false)),
-            NameAndType("arg3", Type::IntegerType(4, false)),
-            NameAndType("arg4", Type::IntegerType(4, false)),
-        };
-    case BFIN_INTRINSIC_SYSCALL5:
-        return {
-            NameAndType("SyscallNo", Type::IntegerType(4, false)),
-            NameAndType("arg1", Type::IntegerType(4, false)),
-            NameAndType("arg2", Type::IntegerType(4, false)),
-            NameAndType("arg3", Type::IntegerType(4, false)),
-            NameAndType("arg4", Type::IntegerType(4, false)),
-            NameAndType("arg5", Type::IntegerType(4, false)),
-        };
-    case BFIN_INTRINSIC_SYSCALL6:
-        return {
-            NameAndType("SyscallNo", Type::IntegerType(4, false)),
-            NameAndType("arg1", Type::IntegerType(4, false)),
-            NameAndType("arg2", Type::IntegerType(4, false)),
-            NameAndType("arg3", Type::IntegerType(4, false)),
-            NameAndType("arg4", Type::IntegerType(4, false)),
-            NameAndType("arg5", Type::IntegerType(4, false)),
-            NameAndType("arg6", Type::IntegerType(4, false)),
         };
     default:
         return vector<NameAndType>();
@@ -175,18 +105,30 @@ std::string BlackfinArchitecture::GetFlagName(uint32_t flag) {
     char result[32];
 	switch (flag)
 	{
+	case IL_FLAG_AC0:
+		return "ac0";
+	case IL_FLAG_AC1:
+		return "ac1";
+	case IL_FLAG_AN:
+		return "an";
+	case IL_FLAG_AQ:
+		return "aq";
+    case IL_FLAG_AV0:
+        return "av0";
+    case IL_FLAG_AVS0:
+        return "avs0";
+    case IL_FLAG_AV1:
+        return "av1";
+    case IL_FLAG_AVS1:
+        return "avs1";
+	case IL_FLAG_AZ:
+		return "az";
     case IL_FLAG_CC:
         return "cc";
-	case IL_FLAG_N:
-		return "n";
-	case IL_FLAG_Z:
-		return "z";
-	case IL_FLAG_C:
-		return "c";
 	case IL_FLAG_V:
 		return "v";
-	case IL_FLAG_Q:
-		return "q";
+	case IL_FLAG_VS:
+		return "vs";
 	default:
 		sprintf(result, "flag%" PRIu32, flag);
 		return result;
@@ -197,8 +139,8 @@ std::string BlackfinArchitecture::GetFlagWriteTypeName(uint32_t flags) {
     	switch (flags)
 	{
 		case IL_FLAGWRITE_ALL: return "*";
-		case IL_FLAGWRITE_CC: return "cc";
-		case IL_FLAGWRITE_NZ: return "nz";
+		case IL_FLAGWRITE_A0: return "a0";
+		case IL_FLAGWRITE_A1: return "a1";
 		default:
 			return "";
 	}
@@ -207,15 +149,19 @@ std::string BlackfinArchitecture::GetFlagWriteTypeName(uint32_t flags) {
 BNFlagRole BlackfinArchitecture::GetFlagRole(uint32_t flag, uint32_t semClass) {
     switch (flag)
 	{
-	case IL_FLAG_N:
-		return NegativeSignFlagRole;
-	case IL_FLAG_CC:
-		return SpecialFlagRole;
-	case IL_FLAG_Z:
-		return ZeroFlagRole;
-	case IL_FLAG_C:
+	case IL_FLAG_AC0:
+    case IL_FLAG_AC1:
 		return CarryFlagRole;
+	case IL_FLAG_CC:
+    case IL_FLAG_AQ:
+		return SpecialFlagRole;
+	case IL_FLAG_AZ:
+		return ZeroFlagRole;
 	case IL_FLAG_V:
+    case IL_FLAG_AV0:
+    case IL_FLAG_AV1:
+    case IL_FLAG_AVS0:
+    case IL_FLAG_AVS1:
 		return OverflowFlagRole;
 	default:
 		return SpecialFlagRole;
@@ -226,11 +172,24 @@ std::vector<uint32_t> BlackfinArchitecture::GetFlagsWrittenByFlagWriteType(uint3
     switch (flags)
 	{
 	case IL_FLAGWRITE_ALL:
-		return vector<uint32_t> { IL_FLAG_N, IL_FLAG_CC, IL_FLAG_Z, IL_FLAG_C, IL_FLAG_V };
-	case IL_FLAGWRITE_NZ:
-		return vector<uint32_t> { IL_FLAG_N, IL_FLAG_Z };
-	case IL_FLAGWRITE_CC:
-		return vector<uint32_t> { IL_FLAG_CC };
+		return vector<uint32_t> { 
+            IL_FLAG_AC0, 
+            IL_FLAG_AC1, 
+            IL_FLAG_AN, 
+            IL_FLAG_AQ, 
+            IL_FLAG_AV0, 
+            IL_FLAG_AVS0, 
+            IL_FLAG_AV1, 
+            IL_FLAG_AVS1,
+            IL_FLAG_AZ,
+            IL_FLAG_CC,
+            IL_FLAG_V,
+            IL_FLAG_VS
+        };
+	case IL_FLAGWRITE_A0:
+		return vector<uint32_t> { IL_FLAG_AC0, IL_FLAG_AV0, IL_FLAG_AVS0, IL_FLAG_AN, IL_FLAG_AQ, IL_FLAG_AZ };
+	case IL_FLAGWRITE_A1:
+		return vector<uint32_t> { IL_FLAG_AC1, IL_FLAG_AV1, IL_FLAG_AVS1, IL_FLAG_AN, IL_FLAG_AQ, IL_FLAG_AZ };
 	default:
 		return vector<uint32_t> {};
 	}
@@ -241,25 +200,25 @@ std::vector<uint32_t> BlackfinArchitecture::GetFlagsRequiredForFlagCondition(BNL
 	{
 	case LLFC_E:
 	case LLFC_NE:
-		return vector<uint32_t>{ IL_FLAG_Z };
+		return vector<uint32_t>{ IL_FLAG_AZ };
 	case LLFC_SLT:
 	case LLFC_SGE:
-		return vector<uint32_t>{ IL_FLAG_N, IL_FLAG_V };
+		return vector<uint32_t>{ IL_FLAG_AN, IL_FLAG_V };
 	case LLFC_ULT:
 	case LLFC_UGE:
-		return vector<uint32_t>{ IL_FLAG_C };
+		return vector<uint32_t>{ IL_FLAG_AC0, IL_FLAG_AC1 };
 	case LLFC_SLE:
 	case LLFC_SGT:
-		return vector<uint32_t>{ IL_FLAG_Z, IL_FLAG_N, IL_FLAG_V };
+		return vector<uint32_t>{ IL_FLAG_AZ, IL_FLAG_AN, IL_FLAG_V, IL_FLAG_AV0, IL_FLAG_AV1 };
 	case LLFC_ULE:
 	case LLFC_UGT:
-		return vector<uint32_t>{ IL_FLAG_C, IL_FLAG_Z };
+		return vector<uint32_t>{ IL_FLAG_AC0, IL_FLAG_AC1, IL_FLAG_AZ };
 	case LLFC_NEG:
 	case LLFC_POS:
-		return vector<uint32_t>{ IL_FLAG_N };
+		return vector<uint32_t>{ IL_FLAG_AN };
 	case LLFC_O:
 	case LLFC_NO:
-		return vector<uint32_t>{ IL_FLAG_V };
+		return vector<uint32_t>{ IL_FLAG_V, IL_FLAG_AV0, IL_FLAG_AV1 };
 	default:
 		return vector<uint32_t>();
 	}
@@ -325,14 +284,26 @@ std::vector<uint32_t> BlackfinArchitecture::GetAllRegisters() {
 
 std::vector<uint32_t> BlackfinArchitecture::GetAllFlags() {
     return vector<uint32_t>{
-		IL_FLAG_N, IL_FLAG_CC, IL_FLAG_Z, IL_FLAG_C, IL_FLAG_V, IL_FLAG_Q
+        IL_FLAG_AC0, 
+        IL_FLAG_AC1, 
+        IL_FLAG_AN, 
+        IL_FLAG_AQ, 
+        IL_FLAG_AV0, 
+        IL_FLAG_AVS0, 
+        IL_FLAG_AV1, 
+        IL_FLAG_AVS1,
+        IL_FLAG_AZ,
+        IL_FLAG_CC,
+        IL_FLAG_V,
+        IL_FLAG_VS
 	};
 }
 
 std::vector<uint32_t> BlackfinArchitecture::GetAllFlagWriteTypes() {
     return vector<uint32_t>{
 		IL_FLAGWRITE_ALL,
-		IL_FLAGWRITE_NZ
+		IL_FLAGWRITE_A0,
+        IL_FLAGWRITE_A1
 	};
 }
 
@@ -1322,7 +1293,7 @@ BlackfinArchitecture::GetInstructionLowLevelIL(const uint8_t *data, uint64_t add
         }
         break;
     }
-    case OP_MVSHIFTED:
+    case OP_MVSHIFTED: {
         // FIXME: this implementation is a little hard to follow, consider separating based on number of operands or something
         enum Register dst = instr.operands[0].reg;
         Operator op = instr.operands[1].operat;
@@ -1346,10 +1317,12 @@ BlackfinArchitecture::GetInstructionLowLevelIL(const uint8_t *data, uint64_t add
             else if (op == OPER_LSHIFTL)
                 il.AddInstruction(il.SetRegister(4, dst, il.ShiftLeft(4, il.Register(4, src), il.Const(4, shift_amt))));
             break;
-        }
-        }
+        } 
+        } // end local switch (op)
         break;
     }
+    } // end switch(instr.operation)
+    
     // FIXME: These class members tracking loopsetups are ugly and a bug waiting to happen, but work for now.
     if (this->il_has_loop) {
         if (this->il_next_loopend == addr) {
