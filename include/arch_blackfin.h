@@ -387,6 +387,9 @@ enum Operation {
     OP_EXCPT,
     OP_DSPSHIFT,
     OP_DSPSHIFTIMM,
+    OP_MAX,
+    OP_MIN,
+    OP_ROT,
 
     OP_UNSUPPORTED,
     OP_ILLEGAL

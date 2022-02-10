@@ -35,7 +35,7 @@ bool Ptr2OpInstruction::Disassemble(uint16_t instructionWord, struct blackfin::I
         instr.operands[1].cls = blackfin::OPERATOR;
         instr.operands[2] = { .cls = blackfin::REG, .reg = pregs(src) };
         if (opc == 0) {
-            instr.operation = blackfin::OP_MINUSEQ;
+            instr.operation = blackfin::OP_MV;
             instr.operands[1].operat = blackfin::OPER_MINUSEQ;
         }
         else {

@@ -1047,16 +1047,33 @@ BlackfinArchitecture::GetInstructionLowLevelIL(const uint8_t *data, uint64_t add
         break;
     }
     case OP_MV: {
-
         enum Register dst = instr.operands[0].reg;
+        enum Operator op  = instr.operands[1].operat;
         enum Register src = instr.operands[2].reg;
+        int dst_size = get_register_size(dst);
+        int src_size = get_register_size(src);
 
-        il.AddInstruction(
-                il.SetRegister(
-                    get_register_size(dst), 
-                    dst, 
-                    il.Register(
-                        get_register_size(src), src)));
+        switch (op) {
+        case OPER_EQ:
+            il.AddInstruction(
+                    il.SetRegister(
+                        get_register_size(dst), 
+                        dst, 
+                        il.Register(
+                            get_register_size(src), src)));
+            break;
+        case OPER_MINUSEQ:
+            il.AddInstruction(
+                    il.SetRegister(dst_size, 
+                        dst,
+                        il.Sub(dst_size, 
+                            il.Register(dst_size, dst), 
+                            il.Register(src_size, src))));
+            break;
+        default:
+            il.AddInstruction(il.Unimplemented());
+            break;
+        }
         break;
     }
     case OP_LINK: {
@@ -1319,6 +1336,118 @@ BlackfinArchitecture::GetInstructionLowLevelIL(const uint8_t *data, uint64_t add
             break;
         } 
         } // end local switch (op)
+        break;
+    }
+    case OP_CCBITTST: {
+        ExprId bittst;
+        enum Register reg = instr.operands[3].reg;
+        int imm = instr.operands[5].imm;
+        if (instr.operands[2].flags.cc_inverted) {
+            bittst = il.CompareEqual(4,
+                    il.And(4, 
+                        il.Register(4, reg), 
+                        il.Const(4, 1 << imm)),
+                    il.Const(4, 0));
+        } else {
+            bittst = il.CompareNotEqual(4,
+                    il.And(4, 
+                        il.Register(4, reg), 
+                        il.Const(4, 1 << imm)),
+                    il.Const(4, 0));
+        }
+        il.AddInstruction(il.SetFlag(
+            IL_FLAG_CC, 
+            bittst));
+        break;
+    }
+    case OP_MAX: 
+    case OP_MIN:
+    {
+        enum Register dst = instr.operands[0].reg;
+        enum Register src0 = instr.operands[3].reg;
+        enum Register src1 = instr.operands[5].reg;
+        LowLevelILLabel trueLabel, falseLabel, endLabel;
+        ExprId cmp_il;
+
+        if (instr.operation == OP_MAX) cmp_il = il.CompareSignedGreaterEqual(4, il.Register(4, src0), il.Register(4, src1));
+        else if (instr.operation == OP_MIN) cmp_il = il.CompareSignedLessEqual(4, il.Register(4, src0), il.Register(4, src1));
+
+        il.AddInstruction(il.If(
+                    cmp_il,
+                    trueLabel,
+                    falseLabel));
+
+        if (instr.flags.V) il.AddInstruction(il.SetFlag(il.Flag(IL_FLAG_V), il.Const(1, 0)));
+
+        il.MarkLabel(trueLabel);
+        il.AddInstruction(il.SetRegister(4, dst, il.Register(4, src0)));
+        il.AddInstruction(il.Goto(endLabel));
+        il.MarkLabel(falseLabel);
+        il.AddInstruction(il.SetRegister(4, dst, il.Register(4, src1)));
+        il.MarkLabel(endLabel);
+
+        break;
+    }
+    case OP_ROT: {
+        enum Register dst = instr.operands[0].reg;
+        enum Register src = instr.operands[3].reg;
+        int dst_size = get_register_size(dst);
+        int src_size = get_register_size(src);
+        InstructionOperand rot_amt = instr.operands[5];
+
+        // lift most common cases in a more direct way
+        if (rot_amt.cls == IMM && rot_amt.imm == 0) {
+            il.AddInstruction(il.SetRegister(dst_size, dst, il.Register(src_size, src)));
+            break;
+        }
+        if (rot_amt.cls == IMM && rot_amt.imm == -1) {
+            il.AddInstruction(
+                    il.SetRegister(dst_size,
+                        dst,
+                        il.Or(dst_size, // OR makes more sense but removes "pointer" type from VSA, this is equivalent
+                            il.ShiftLeft(dst_size, 
+                                il.Flag(IL_FLAG_CC), 
+                                il.Const(dst_size, (dst_size * 8) - 1)),
+                            il.LogicalShiftRight(src_size, il.Register(src_size, src), il.Const(1, 1)))));
+            break;
+        }
+        if (rot_amt.cls == IMM && rot_amt.imm == 1) {
+            il.AddInstruction(
+                    il.SetRegister(dst_size,
+                        dst,
+                        il.Or(dst_size, // OR makes more sense but removes "pointer" type from VSA, this is equivalent
+                            il.ShiftLeft(src_size, il.Register(src_size, src), il.Const(1, 1)),
+                            il.Flag(IL_FLAG_CC))));
+            break;
+        }
+        // TODO: lift other uses of ROT
+        il.AddInstruction(il.Unimplemented());
+        break;
+        /*
+        ExprId rot_amt_il;
+        if (rot_amt.cls == REG) {
+            rot_amt_il = il.Register(get_register_size(rot_amt.reg), rot_amt.reg);
+        } else if (rot_amt.cls == IMM) {
+            rot_amt_il = il.Const(4, rot_amt.imm);
+        }
+        */
+    }
+    case OP_CCDREG: {
+        enum Register reg;
+        int reg_size;
+        if (instr.operands[0].reg == REG_CC) {
+            if (instr.operands[2].reg == REG_CC) {
+                il.AddInstruction(il.SetFlag(IL_FLAG_CC, il.Not(1, il.Flag(IL_FLAG_CC))));
+                break;
+            }
+            reg = instr.operands[2].reg;
+            reg_size = get_register_size(reg);
+            il.AddInstruction(il.SetFlag(IL_FLAG_CC, il.CompareNotEqual(reg_size, il.Register(reg_size, reg), il.Const(reg_size, 0))));
+        } else {
+            reg = instr.operands[0].reg;
+            reg_size = get_register_size(reg);
+            il.AddInstruction(il.SetRegister(reg_size, reg, il.ZeroExtend(reg_size, il.Flag(IL_FLAG_CC))));
+        }
         break;
     }
     } // end switch(instr.operation)
