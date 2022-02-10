@@ -65,4 +65,8 @@ private:
     uint64_t next_loopstart;
     enum Register lc;
     bool has_loop;
+    uint64_t il_next_loopend;
+    uint64_t il_next_loopstart;
+    enum Register il_lc;
+    bool il_has_loop;
 };

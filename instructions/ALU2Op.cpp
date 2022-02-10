@@ -33,14 +33,14 @@ bool ALU2opInstruction::Disassemble(uint16_t instructionWord, struct blackfin::I
         break;
     case 4:
     case 5:
-        instr.operation = blackfin::OP_ALUADDTHENSHIFT;
+        instr.operation = blackfin::OP_MVADDTHENSHIFT;
         instr.operand_count = 7;
         instr.operands[0] = { .cls = blackfin::REG, .reg = dregs(dst) };
         instr.operands[1] = { .cls = blackfin::OPERATOR, .operat = blackfin::OPER_EQ };
         instr.operands[2] = { .cls = blackfin::REG, .reg = dregs(dst) };
         instr.operands[3] = { .cls = blackfin::OPERATOR, .operat = blackfin::OPER_PLUS };
         instr.operands[4] = { .cls = blackfin::REG, .reg = dregs(src) };
-        instr.operands[5] = { .cls = blackfin::OPERATOR, .operat = blackfin::OPER_LSHIFTR };
+        instr.operands[5] = { .cls = blackfin::OPERATOR, .operat = blackfin::OPER_LSHIFTL };
         instr.operands[6].cls = blackfin::IMM;
         if (opc == 4) instr.operands[6].imm = 1;
         if (opc == 5) instr.operands[6].imm = 2;

@@ -3,7 +3,6 @@
 #include "binaryninjacore.h"
 #include "lowlevelilinstruction.h"
 #include "arch_blackfin.h"
-#include "syscallent.h"
 #include "Disassembler.h"
 #include <string.h>
 
@@ -279,7 +278,7 @@ std::string BlackfinArchitecture::GetRegisterName(uint32_t reg) {
     if (reg >= REG_RL0 && reg < REG_LASTREG) {
         return blackfin::get_register_name(static_cast<enum Register>(reg));
     } else {
-        BinaryNinja::LogInfo("unknown register! reg: %d", reg);
+        // BinaryNinja::LogInfo("unknown register! reg: %d", reg);
         return "unknown";
     }
 }
@@ -659,6 +658,27 @@ bool BlackfinArchitecture::GetInstructionInfo(const uint8_t *data, uint64_t addr
     int instr_size = Disassemble((uint8_t*)data, addr, 0, instr);
     if (instr.operation == blackfin::OP_ILLEGAL) return true;
     result.length = instr_size;
+
+    if (instr.operation == blackfin::OP_LSETUP) {
+        int loopStart = instr.operands[2].imm + addr;
+        int loopEnd = instr.operands[4].imm + addr;
+        enum Register loop_count_reg = instr.operands[6].reg;
+        this->has_loop = true;
+        this->next_loopend = loopEnd;
+        this->next_loopstart = loopStart;
+        this->lc = loop_count_reg;
+    }
+
+    if (this->has_loop) {
+        if (addr == this->next_loopend) {
+            result.AddBranch(FalseBranch, addr + instr_size);
+            result.AddBranch(TrueBranch, this->next_loopstart);
+            this->has_loop = false;
+            this->next_loopend = 0;
+            this->next_loopstart = 0;
+        }
+    }
+
     switch (instr.operation) {
     case blackfin::OP_BRCC:
        result.AddBranch(FalseBranch, addr + 2);
@@ -774,6 +794,13 @@ BlackfinArchitecture::GetInstructionLowLevelIL(const uint8_t *data, uint64_t add
     
     len = instr_size;
     bool status = true;
+    if (this->has_loop) {
+        if (this->next_loopstart == addr) {
+            // LowLevelILLabel startLabel;
+            // il.AddInstruction(il.Goto(startLabel));
+            // il.MarkLabel(startLabel);
+        }
+    }
     switch (instr.operation) {
     case OP_NOP:
         il.AddInstruction(il.Nop());
@@ -907,14 +934,14 @@ BlackfinArchitecture::GetInstructionLowLevelIL(const uint8_t *data, uint64_t add
         }
         break;
     }
-    case OP_ALUADDTHENSHIFT: {
+    case OP_MVADDTHENSHIFT: {
         struct InstructionOperand dst = instr.operands[0];
-        struct InstructionOperand src = instr.operands[2];
+        struct InstructionOperand src = instr.operands[4];
         int imm = instr.operands[6].imm;
         il.AddInstruction(il.SetRegister(4, 
                     dst.reg, 
                     il.ShiftLeft(4, 
-                        il.Add(4, dst.reg, src.reg),
+                        il.Add(4, il.Register(4, dst.reg), il.Register(get_register_size(src.reg), src.reg)),
                         il.Const(1, imm))));
         break;
     }
@@ -983,34 +1010,37 @@ BlackfinArchitecture::GetInstructionLowLevelIL(const uint8_t *data, uint64_t add
         is_ldlo = reginfo.offset == 0;
         is_ldhi = reginfo.offset == 2;
 
-        next_is_ldlo = nextreginfo.offset == 0;
-        next_is_ldhi = nextreginfo.offset == 2;
+        next_is_ldlo = nextreginfo.offset == 0 && next_instr.operation == OP_LDIMMHW;
+        next_is_ldhi = nextreginfo.offset == 2 && next_instr.operation == OP_LDIMMHW;
 
         if (is_ldhi && next_is_ldlo && reginfo.fullWidthRegister == nextreginfo.fullWidthRegister) { // load 32 bit immediate idiom
             il.AddInstruction(
-            il.SetRegister(4, 
-                reginfo.fullWidthRegister, 
-                il.Const(4, (instr.operands[2].imm << 16) | (next_instr.operands[2].imm))));
+                il.SetRegister(4, 
+                    reginfo.fullWidthRegister, 
+                    il.ConstPointer(4, (instr.operands[2].imm << 16) | (next_instr.operands[2].imm))));
             len += next_instrsz;
             return status;
-        } else if (is_ldlo && next_is_ldhi && reginfo.fullWidthRegister == nextreginfo.fullWidthRegister) {
+        } else if (is_ldlo && next_is_ldhi && reginfo.fullWidthRegister == nextreginfo.fullWidthRegister) { // load 32 bit immediate
             il.AddInstruction(
             il.SetRegister(4, 
                 reginfo.fullWidthRegister, 
-                il.Const(4, (next_instr.operands[2].imm << 16) | (instr.operands[2].imm))));
+                il.ConstPointer(4, (next_instr.operands[2].imm << 16) | (instr.operands[2].imm))));
             len += next_instrsz;
             return status;
         } else {
             if (reginfo.fullWidthRegister == reg) { // Full width reg load
-                il.AddInstruction(il.SetRegister(get_register_size(reg), reginfo.fullWidthRegister, il.Const(4, imm)));
+                il.AddInstruction(il.SetRegister(get_register_size(reg), reginfo.fullWidthRegister, il.ConstPointer(4, imm)));
             }
             else if (reginfo.offset == 0) { // low
+                
                 il.AddInstruction(
-                    il.SetRegister(
-                        4, reginfo.fullWidthRegister, 
-                        il.Or(4, 
-                            il.And(4, il.Register(4, reginfo.fullWidthRegister), il.Const(4, 0xffff0000)), 
-                            il.Const(2, imm))));
+                    il.SetRegister(4, 
+                        reginfo.fullWidthRegister, 
+                        il.Add(4, 
+                            il.And(4, 
+                                il.Register(4, reginfo.fullWidthRegister), 
+                                il.ConstPointer(4, 0xffff0000)), 
+                            il.ConstPointer(2, imm), 0xffffffff)));
             }
             else if (reginfo.offset == 2) { // high
                 // FIXME: This does NOT follow spec, but is here to help the VSA understand
@@ -1018,7 +1048,7 @@ BlackfinArchitecture::GetInstructionLowLevelIL(const uint8_t *data, uint64_t add
                 // happening by iself/where the low bits weren't overwritten before the next read, but if that
                 // does happen, this will be !INCORRECT! il. The commented code below follows the spec.
                 // but outputs ugly il, and BN can't track the final value of the register.
-                il.AddInstruction(il.SetRegister(4, reginfo.fullWidthRegister, il.Const(4, imm << 16)));
+                il.AddInstruction(il.SetRegister(4, reginfo.fullWidthRegister, il.ConstPointer(4, imm << 16)));
                 /*
                 il.AddInstruction(
                     il.SetRegister(
@@ -1254,15 +1284,6 @@ BlackfinArchitecture::GetInstructionLowLevelIL(const uint8_t *data, uint64_t add
         break;
     }
     case OP_LSETUP: {
-        // LOOPSETUP (loop_start, loop_end) LCx (= Px (>> 1))
-        // loop_start:
-        // for (int i = 0; i < LCx; i++) {
-        //     code here;
-        // loop_end: 
-        // }
-        
-        // BNLowLevelILLabel loopStart, loopBody, loopExit;
-
         int loopStart = instr.operands[2].imm + addr;
         int loopEnd = instr.operands[4].imm + addr;
         enum Register loop_count_reg = instr.operands[6].reg;
@@ -1277,54 +1298,25 @@ BlackfinArchitecture::GetInstructionLowLevelIL(const uint8_t *data, uint64_t add
                             il.Const(1, 1))));
         }
 
+        // Display of the intrinsic is not necessary now that the loops are working
+        /*
         il.AddInstruction(il.Intrinsic({}, BFIN_INTRINSIC_LSETUP, {
                     il.Const(4, loopStart),
                     il.Const(4, loopEnd),
                     il.Register(4, loop_count_reg)
                 }));
-        
-        /*
-        this->has_loop = true;
-        this->next_loopend = loopEnd;
-        this->next_loopstart = loopStart;
-        this->lc = loop_count_reg;
         */
-        /* works but doesn't just loops in place doing nothing
-        LowLevelILLabel startLabel;
-        LowLevelILLabel continueLabel;
-        LowLevelILLabel doneLabel;
-
-        il.AddInstruction(il.Goto(startLabel));
-        il.MarkLabel(startLabel);
-        il.AddInstruction(il.If(
-                    il.CompareNotEqual(4, il.Register(4, loop_count_reg), il.Const(4, 0)),
-                    continueLabel, 
-                    doneLabel));
         
-        il.MarkLabel(continueLabel);
-        il.AddInstruction(il.SetRegister(4, loop_count_reg, il.Sub(4, il.Register(4, loop_count_reg), il.Const(1, 1))));
-        il.AddInstruction(il.Goto(startLabel));
-        il.MarkLabel(doneLabel);
-        */
+        this->il_has_loop = true;
+        this->il_next_loopend = loopEnd;
+        this->il_next_loopstart = loopStart;
+        this->il_lc = loop_count_reg;
         break;
     }
     case OP_RAISE: {
         int raise_no = instr.operands[1].imm;
-        // TODO: Syscalls must be implemented in the Plaftorm, not architecture, and there is no
-        // visibility into platform at the moment
         if (raise_no == 0) { // Syscall
             il.AddInstruction(il.SystemCall());
-            /*
-            il.AddInstruction(il.Intrinsic({}, BFIN_INTRINSIC_SYSCALL6, {
-                        il.Register(4, REG_P0),
-                        il.Register(4, REG_R0),
-                        il.Register(4, REG_R1),
-                        il.Register(4, REG_R2),
-                        il.Register(4, REG_R3),
-                        il.Register(4, REG_R4),
-                        il.Register(4, REG_R5),
-                    }));
-            */
         } else {
             il.AddInstruction(il.Intrinsic({}, BFIN_INTRINSIC_RAISE, { il.Const(4, raise_no) }));
         }
@@ -1358,30 +1350,20 @@ BlackfinArchitecture::GetInstructionLowLevelIL(const uint8_t *data, uint64_t add
         }
         break;
     }
-    // FIXME: why isn't this doing what its supposed to? just destroys control flow
-    /*
-    if (this->has_loop) {
-        if (this->next_loopstart == addr) {
-            LowLevelILLabel startLabel;
-            il.AddInstruction(il.Goto(startLabel));
-            il.MarkLabel(startLabel);
-        }
-        if (this->next_loopend == addr) {
-            LowLevelILLabel falseLabel, trueLabel;
-            ExprId cond = il.CompareNotEqual(4, il.Register(4, this->lc), il.Const(1, 0));
-            il.AddInstruction(il.SetRegister(4, this->lc, il.Sub(4, il.Register(4, this->lc), il.Const(1, 1))));
-            il.AddInstruction(il.If(cond, 
-                        trueLabel,
-                        falseLabel));
-            il.MarkLabel(trueLabel);
-            il.AddInstruction(il.Jump(il.ConstPointer(4, this->next_loopstart)));
-            il.MarkLabel(falseLabel);
-            this->next_loopend = 0;
-            this->next_loopstart = 0;
-            this->has_loop = false;
+    // FIXME: These class members tracking loopsetups are ugly and a bug waiting to happen, but work for now.
+    if (this->il_has_loop) {
+        if (this->il_next_loopend == addr) {
+            LowLevelILLabel endLabel, continueLabel;
+            il.AddInstruction(il.SetRegister(4, this->il_lc, il.Sub(4, il.Register(4, this->il_lc), il.Const(4, 1))));
+            il.AddInstruction(il.If(il.CompareEqual(4, il.Register(4, this->il_lc), il.Const(4, 0)), endLabel, continueLabel));
+            il.MarkLabel(continueLabel);
+            il.AddInstruction(il.Jump(il.Const(4, this->il_next_loopstart)));
+            il.MarkLabel(endLabel);
+            this->il_next_loopend = 0;
+            this->il_next_loopstart = 0;
+            this->il_has_loop = false;
         }
     }
-    */
     return status;
 }
 
@@ -1480,6 +1462,56 @@ public:
 	}
 };
 
+class BlackfinBFLTRelocationHandler : public RelocationHandler {
+public:
+	virtual bool GetRelocationInfo(Ref<BinaryView> view, Ref<Architecture> arch, vector<BNRelocationInfo>& result) override
+	{
+		(void)view; (void)arch;
+		for (auto& reloc : result)
+		{
+            reloc.addend = 0;
+            reloc.baseRelative = false;
+            reloc.dataRelocation = false;
+            reloc.external = false;
+            reloc.hasSign = false;
+            reloc.implicitAddend = false;
+            reloc.pcRelative = false;
+		}
+		return false;
+	}
+
+    virtual bool ApplyRelocation(Ref<BinaryView> view, Ref<Architecture> arch, Ref<Relocation> reloc, uint8_t* dest, size_t len) override
+	{
+		// Note: info.base contains preferred base address and the base where the image is actually loaded
+		(void)view;
+		(void)arch;
+		(void)len;
+		uint64_t* data64 = (uint64_t*)dest;
+		uint32_t* data32 = (uint32_t*)dest;
+		uint16_t* data16 = (uint16_t*)dest;
+		auto info = reloc->GetInfo();
+        /*
+        LogInfo("info.address: %#08x", info.address);
+        LogInfo("info.nativeType: %#08x", info.nativeType);
+        LogInfo("dest: %p", dest);
+        LogInfo("len: %p", len);
+        LogInfo("size: %08x", info.size);
+        LogInfo("target: %08x", reloc->GetTarget());
+        LogInfo("address: %08x\n\n", reloc->GetAddress());
+        */
+		if (info.size == 4)
+		{
+			data32[0] = reloc->GetTarget();
+		}
+		else if (info.size == 2)
+		{
+			data16[0] = reloc->GetTarget();
+		}
+		return true;
+	}
+
+};
+
 extern "C" {
     BN_DECLARE_CORE_ABI_VERSION
     BINARYNINJAPLUGIN bool CorePluginInit()
@@ -1499,6 +1531,7 @@ extern "C" {
         syscall_conv = new BlackfinLinuxSystemCallingConvention(bfin);
 	    bfin->RegisterCallingConvention(syscall_conv);
 
+        bfin->RegisterRelocationHandler("bFLT File", new BlackfinBFLTRelocationHandler());
         return true;
     }
 }
