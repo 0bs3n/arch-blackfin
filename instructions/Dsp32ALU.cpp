@@ -122,6 +122,7 @@ Dsp32ALUInstruction::Disassemble(uint16_t instructionWordHigh, uint16_t instruct
 	}
 	else if (HL == 1 && aop == 0 && aopcde == 2)
 	{
+        instr.operation = OP_ADD;
         instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs_hi(dst0) };
         instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
         instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs_lo(src0) };
@@ -131,6 +132,7 @@ Dsp32ALUInstruction::Disassemble(uint16_t instructionWordHigh, uint16_t instruct
 	}
 	else if (HL == 1 && aop == 1 && aopcde == 2)
 	{
+        instr.operation = OP_ADD;
         instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs_hi(dst0) };
         instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
         instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs_lo(src0) };
@@ -140,6 +142,7 @@ Dsp32ALUInstruction::Disassemble(uint16_t instructionWordHigh, uint16_t instruct
 	}
 	else if (HL == 1 && aop == 2 && aopcde == 2)
 	{
+        instr.operation = OP_ADD;
         instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs_hi(dst0) };
         instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
         instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs_hi(src0) };
@@ -149,6 +152,7 @@ Dsp32ALUInstruction::Disassemble(uint16_t instructionWordHigh, uint16_t instruct
 	}
 	else if (HL == 1 && aop == 3 && aopcde == 2)
 	{
+        instr.operation = OP_ADD;
         instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs_hi(dst0) };
         instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
         instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs_hi(src0) };
@@ -158,6 +162,7 @@ Dsp32ALUInstruction::Disassemble(uint16_t instructionWordHigh, uint16_t instruct
 	}
 	else if (HL == 0 && aop == 0 && aopcde == 3)
 	{
+        instr.operation = OP_SUB;
         instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs_lo(dst0) };
         instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
         instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs_lo(src0) };
@@ -167,6 +172,7 @@ Dsp32ALUInstruction::Disassemble(uint16_t instructionWordHigh, uint16_t instruct
 	}
 	else if (HL == 0 && aop == 1 && aopcde == 3)
 	{
+        instr.operation = OP_SUB;
         instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs_lo(dst0) };
         instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
         instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs_lo(src0) };
@@ -176,6 +182,7 @@ Dsp32ALUInstruction::Disassemble(uint16_t instructionWordHigh, uint16_t instruct
 	}
 	else if (HL == 0 && aop == 3 && aopcde == 2)
 	{
+        instr.operation = OP_ADD;
         instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs_lo(dst0) };
         instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
         instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs_hi(src0) };
@@ -185,6 +192,7 @@ Dsp32ALUInstruction::Disassemble(uint16_t instructionWordHigh, uint16_t instruct
 	}
 	else if (HL == 1 && aop == 0 && aopcde == 3)
 	{
+        instr.operation = OP_SUB;
         instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs_hi(dst0) };
         instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
         instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs_lo(src0) };
@@ -194,6 +202,7 @@ Dsp32ALUInstruction::Disassemble(uint16_t instructionWordHigh, uint16_t instruct
 	}
 	else if (HL == 1 && aop == 1 && aopcde == 3)
 	{
+        instr.operation = OP_SUB;
         instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs_hi(dst0) };
         instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
         instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs_lo(src0) };
@@ -203,6 +212,7 @@ Dsp32ALUInstruction::Disassemble(uint16_t instructionWordHigh, uint16_t instruct
 	}
 	else if (HL == 1 && aop == 2 && aopcde == 3)
 	{
+        instr.operation = OP_SUB;
         instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs_hi(dst0) };
         instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
         instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs_hi(src0) };
@@ -212,6 +222,7 @@ Dsp32ALUInstruction::Disassemble(uint16_t instructionWordHigh, uint16_t instruct
 	}
 	else if (HL == 1 && aop == 3 && aopcde == 3)
 	{
+        instr.operation = OP_SUB;
         instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs_hi(dst0) };
         instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
         instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs_hi(src0) };
@@ -221,6 +232,7 @@ Dsp32ALUInstruction::Disassemble(uint16_t instructionWordHigh, uint16_t instruct
 	}
 	else if (HL == 0 && aop == 2 && aopcde == 2)
 	{
+        instr.operation = OP_ADD;
         instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs_lo(dst0) };
         instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
         instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs_hi(src0) };
@@ -230,6 +242,7 @@ Dsp32ALUInstruction::Disassemble(uint16_t instructionWordHigh, uint16_t instruct
 	}
 	else if (HL == 0 && aop == 1 && aopcde == 2)
 	{
+        instr.operation = OP_ADD;
         instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs_lo(dst0) };
         instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
         instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs_lo(src0) };
@@ -239,6 +252,7 @@ Dsp32ALUInstruction::Disassemble(uint16_t instructionWordHigh, uint16_t instruct
 	}
 	else if (HL == 0 && aop == 2 && aopcde == 3)
 	{
+        instr.operation = OP_SUB;
         instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs_lo(dst0) };
         instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
         instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs_hi(src0) };
@@ -248,6 +262,7 @@ Dsp32ALUInstruction::Disassemble(uint16_t instructionWordHigh, uint16_t instruct
 	}
 	else if (HL == 0 && aop == 3 && aopcde == 3)
 	{
+        instr.operation = OP_SUB;
         instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs_lo(dst0) };
         instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
         instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs_hi(src0) };
@@ -257,6 +272,7 @@ Dsp32ALUInstruction::Disassemble(uint16_t instructionWordHigh, uint16_t instruct
 	}
 	else if (HL == 0 && aop == 0 && aopcde == 2)
 	{
+        instr.operation = OP_ADD;
         instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs_lo(dst0) };
         instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
         instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs_lo(src0) };
@@ -728,6 +744,7 @@ Dsp32ALUInstruction::Disassemble(uint16_t instructionWordHigh, uint16_t instruct
 	}
 	else if (aop == 3 && aopcde == 0)
 	{
+        instr.operation = OP_VECTOR16;
         instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst0) };
         instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
         instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src0) };
@@ -737,6 +754,7 @@ Dsp32ALUInstruction::Disassemble(uint16_t instructionWordHigh, uint16_t instruct
 	}
 	else if (aop == 1 && aopcde == 4)
 	{
+        instr.operation = OP_SUB;
         instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst0) };
         instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
         instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src0) };
@@ -942,6 +960,7 @@ Dsp32ALUInstruction::Disassemble(uint16_t instructionWordHigh, uint16_t instruct
 	}
 	else if (aop == 0 && aopcde == 4)
 	{
+        instr.operation = OP_ADD;
         instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst0) };
         instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
         instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src0) };
@@ -952,6 +971,7 @@ Dsp32ALUInstruction::Disassemble(uint16_t instructionWordHigh, uint16_t instruct
 	}
 	else if (aop == 0 && aopcde == 0)
 	{
+        instr.operation = OP_ADD;
         instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(dst0) };
         instr.operands[instr.operand_count++] = { .cls = OPERATOR, .operat = OPER_EQ };
         instr.operands[instr.operand_count++] = { .cls = REG, .reg = dregs(src0) };

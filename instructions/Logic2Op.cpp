@@ -26,6 +26,7 @@ bool Logic2OpInstruction::Disassemble(uint16_t instructionWord, struct blackfin:
         if (opc == 0) instr.operands[2].flags.cc_inverted = true;
         return true;
 	} else if (opc == 2 || opc == 3 || opc == 4) {
+        instr.operation = blackfin::OP_BITOP;
         instr.operand_count = 4;
         instr.operands[0].cls = blackfin::MNEMOMIC;
         instr.operands[1] = { .cls = blackfin::REG, .reg = dregs(dst) };
@@ -34,15 +35,12 @@ bool Logic2OpInstruction::Disassemble(uint16_t instructionWord, struct blackfin:
 
         if (opc == 2) {
             instr.operands[0].mnemonic = blackfin::OL_BITSET;
-            instr.operation = blackfin::OP_BITSET;
         }
         if (opc == 3) {
             instr.operands[0].mnemonic = blackfin::OL_BITTGL;
-            instr.operation = blackfin::OP_BITTGL;
         }
         if (opc == 4) {
             instr.operands[0].mnemonic = blackfin::OL_BITCLR;
-            instr.operation = blackfin::OP_BITCLR;
         }
     } else if (opc == 5 || opc == 6 || opc == 7) {
         instr.operand_count = 3;

@@ -21,7 +21,7 @@ Dsp32ShiftImmInstruction::Disassemble(uint16_t instructionWordHigh, uint16_t ins
 	int HLs      = ((instructionWordLow >> DSP32ShiftImm_HLs_bits) & DSP32ShiftImm_HLs_mask);
 
     instr.operand_count = 0;
-    instr.operation = OP_DSPSHIFTIMM;
+    instr.operation = OP_MVSHIFTED;
 	if (sop == 0 && sopcde == 0)
 	{
         instr.operands[instr.operand_count++] = {.cls = REG, .reg = (HLs & 2) ? dregs_hi(dst0) : dregs_lo(dst0) };

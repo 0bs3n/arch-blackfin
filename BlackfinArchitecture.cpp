@@ -1070,6 +1070,14 @@ BlackfinArchitecture::GetInstructionLowLevelIL(const uint8_t *data, uint64_t add
                             il.Register(dst_size, dst), 
                             il.Register(src_size, src))));
             break;
+        case OPER_PLUSEQ:
+            il.AddInstruction(
+                    il.SetRegister(dst_size, 
+                        dst,
+                        il.Add(dst_size, 
+                            il.Register(dst_size, dst), 
+                            il.Register(src_size, src))));
+            break;
         default:
             il.AddInstruction(il.Unimplemented());
             break;
@@ -1312,29 +1320,46 @@ BlackfinArchitecture::GetInstructionLowLevelIL(const uint8_t *data, uint64_t add
     }
     case OP_MVSHIFTED: {
         // FIXME: this implementation is a little hard to follow, consider separating based on number of operands or something
-        enum Register dst = instr.operands[0].reg;
-        Operator op = instr.operands[1].operat;
-        int shift_amt = instr.operands[2].imm;
-        switch (op) {
-        case OPER_ASHIFTREQ:
-            il.AddInstruction(il.SetRegister(4, dst, il.ArithShiftRight(4, il.Register(4, dst), il.Const(4, shift_amt))));
+        
+        // TODO when the S flag is set, shifts which would overflow saturate instead.
+        // this needs to be implemented separately. Same for the V flag, which signals
+        // a vector operation.
+        if (instr.flags.S || instr.flags.V) {
+            il.AddInstruction(il.Unimplemented());
             break;
-        case OPER_LSHIFTREQ:
-            il.AddInstruction(il.SetRegister(4, dst, il.LogicalShiftRight(4, il.Register(4, dst), il.Const(4, shift_amt))));
-            break;
-        case OPER_LSHIFTLEQ:
-            il.AddInstruction(il.SetRegister(4, dst, il.ShiftLeft(4, il.Register(4, dst), il.Const(4, shift_amt))));
-            break;
-        case OPER_EQ: {
-            enum Register src = instr.operands[2].reg;
+        }
+
+        int shift_amt;
+        enum Register dst, src;
+        Operator op;
+
+        if (instr.operands[1].operat != OPER_EQ) {
+            shift_amt = instr.operands[2].imm;
+            dst = instr.operands[0].reg;
+            src = dst;
+            op = instr.operands[1].operat;
+        } else {
             shift_amt = instr.operands[4].imm;
+            dst = instr.operands[0].reg;
+            src = instr.operands[2].reg;
             op = instr.operands[3].operat;
-            if (op == OPER_LSHIFTR)
-                il.AddInstruction(il.SetRegister(4, dst, il.LogicalShiftRight(4, il.Register(4, src), il.Const(4, shift_amt))));
-            else if (op == OPER_LSHIFTL)
-                il.AddInstruction(il.SetRegister(4, dst, il.ShiftLeft(4, il.Register(4, src), il.Const(4, shift_amt))));
+        }
+        int dst_size = get_register_size(dst);
+        int src_size = get_register_size(src);
+
+        switch (op) {
+        case OPER_ASHIFTR:
+        case OPER_ASHIFTREQ:
+            il.AddInstruction(il.SetRegister(dst_size, dst, il.ArithShiftRight(src_size, il.Register(4, src), il.Const(4, shift_amt))));
             break;
-        } 
+        case OPER_LSHIFTR:
+        case OPER_LSHIFTREQ:
+            il.AddInstruction(il.SetRegister(dst_size, dst, il.LogicalShiftRight(src_size, il.Register(src_size, src), il.Const(4, shift_amt))));
+            break;
+        case OPER_LSHIFTL:
+        case OPER_LSHIFTLEQ:
+            il.AddInstruction(il.SetRegister(dst_size, dst, il.ShiftLeft(src_size, il.Register(src_size, src), il.Const(4, shift_amt))));
+            break;
         } // end local switch (op)
         break;
     }
@@ -1447,6 +1472,96 @@ BlackfinArchitecture::GetInstructionLowLevelIL(const uint8_t *data, uint64_t add
             reg = instr.operands[0].reg;
             reg_size = get_register_size(reg);
             il.AddInstruction(il.SetRegister(reg_size, reg, il.ZeroExtend(reg_size, il.Flag(IL_FLAG_CC))));
+        }
+        break;
+    }
+    case OP_VECTOR16: {
+        enum Register dst = instr.operands[0].reg;
+        enum Register src0 = instr.operands[2].reg;
+        enum Register src1 = instr.operands[4].reg;
+        enum Operator op = instr.operands[3].operat;
+        
+        switch (op) {
+        case OPER_MINUSORMINUS:
+            if (dst == src0 && src0 == src1) { // register clearing idiom
+                il.AddInstruction(il.SetRegister(get_register_size(dst), dst, il.Const(get_register_size(dst), 0)));
+                break;
+            }
+            // FALLTHROUGH
+        default:
+            il.AddInstruction(il.Unimplemented());
+            break;
+        }
+        break;
+    }
+    case OP_ADD: {
+        enum Register dst = instr.operands[0].reg;
+        enum Register src0 = instr.operands[2].reg;
+        enum Register src1 = instr.operands[4].reg;
+        int dst_size = get_register_size(dst);
+        int src0_size = get_register_size(src0);
+        int src1_size = get_register_size(src1);
+
+        // TODO: saturation (S flag) needs to be handled separately.
+        // unimplemented for now.
+        if (instr.flags.S) {
+            il.AddInstruction(il.Unimplemented());
+            break;
+        } else if (instr.flags.NS) {
+            il.AddInstruction(il.SetRegister(dst_size, 
+                        dst,
+                        il.Add(dst_size,
+                            il.Register(src0_size, src0),
+                            il.Register(src1_size, src1))));
+            break;
+        } else {
+            il.AddInstruction(il.Unimplemented());
+            break;
+        }
+        break;
+    }
+    case OP_SUB: {
+        enum Register dst = instr.operands[0].reg;
+        enum Register src0 = instr.operands[2].reg;
+        enum Register src1 = instr.operands[4].reg;
+        int dst_size = get_register_size(dst);
+        int src0_size = get_register_size(src0);
+        int src1_size = get_register_size(src1);
+
+        // TODO: saturation (S flag) needs to be handled separately.
+        // unimplemented for now.
+        if (instr.flags.S) {
+            il.AddInstruction(il.Unimplemented());
+            break;
+        } else if (instr.flags.NS) {
+            il.AddInstruction(il.SetRegister(dst_size, 
+                        dst,
+                        il.Sub(dst_size,
+                            il.Register(src0_size, src0),
+                            il.Register(src1_size, src1))));
+            break;
+        } else {
+            il.AddInstruction(il.Unimplemented());
+            break;
+        }
+        break;
+    }
+    case OP_BITOP: {
+        enum OpLiteral op = instr.operands[0].mnemonic;
+        enum Register reg = instr.operands[1].reg;
+        int  imm          = instr.operands[3].imm;
+        int  reg_size     = get_register_size(reg);
+
+        switch (op) {
+        case OL_BITSET:
+            il.AddInstruction(il.SetRegister(reg_size, reg, il.Or(reg_size, il.Register(reg_size, reg), il.Const(reg_size, 1 << imm))));
+            break;
+        case OL_BITCLR:
+            il.AddInstruction(il.SetRegister(reg_size, reg, il.And(reg_size, il.Register(reg_size, reg), il.Const(reg_size, ~(1 << imm)))));
+            break;
+        case OL_BITTGL:
+            il.AddInstruction(il.SetRegister(reg_size, reg, il.Xor(reg_size, il.Register(reg_size, reg), il.Const(reg_size, 1 << imm))));
+            break;
         }
         break;
     }
@@ -1634,6 +1749,7 @@ extern "C" {
 	    bfin->RegisterCallingConvention(syscall_conv);
 
         bfin->RegisterRelocationHandler("bFLT File", new BlackfinBFLTRelocationHandler());
+        BinaryViewType::RegisterArchitecture("ELF", 106, LittleEndian, bfin);
         return true;
     }
 }

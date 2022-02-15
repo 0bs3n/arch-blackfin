@@ -192,6 +192,7 @@ enum OpLiteral {
     OL_ALIGN8,
     OL_ALIGN16,
     OL_ALIGN24,
+    OL_BREV
 };
 
 static const char *mnemonics[] = {
@@ -285,7 +286,8 @@ static const char *mnemonics[] = {
     "bxor",
     "align8",
     "align16",
-    "align24"
+    "align24",
+    "(brev)"
 };
 
 enum Operator {
@@ -329,7 +331,7 @@ enum Operator {
 
 static const char *operator_names[] = {
     " = ", " += ", " == ", " < ", " <= ", " u< ", " u<= ", 
-    " |= ", " &= ", " ^= ", " + ", " >> ", " << ", " <<< ",
+    " |= ", " &= ", " ^= ", " + ", " >> ", " << ", " >>> ",
     " >>= ", " <<= ", " >>>= ", " *= ", " = -", " = ~", ", ",
     " -= ", " - ", " & ", " | ", " ^ ", " ++ ", " -- ", "(",
     ") ", " * ", ":", " -|+ ", " +|+ ", " -|- ", " +|+ "
@@ -390,6 +392,10 @@ enum Operation {
     OP_MAX,
     OP_MIN,
     OP_ROT,
+    OP_VECTOR16,
+    OP_ADD,
+    OP_SUB,
+    OP_BITOP,
 
     OP_UNSUPPORTED,
     OP_ILLEGAL

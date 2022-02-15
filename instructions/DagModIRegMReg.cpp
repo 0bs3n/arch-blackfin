@@ -21,7 +21,12 @@ DagModIRegMRegInstruction::Disassemble(uint16_t instructionWord, struct blackfin
 
     switch (op) {
     case 0:
-        instr.operation = blackfin::OP_RCPLUSEQ;
+        if (br) { 
+            instr.operation = blackfin::OP_RCPLUSEQ; 
+            instr.operand_count = 4;
+            instr.operands[3] = { .cls = blackfin::MNEMOMIC, .mnemonic = blackfin::OL_BREV };
+        }
+        else instr.operation = blackfin::OP_MV;
         instr.operands[1].operat = blackfin::OPER_PLUSEQ;
         break;
     case 1:
