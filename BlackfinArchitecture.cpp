@@ -4,6 +4,7 @@
 #include "lowlevelilinstruction.h"
 #include "arch_blackfin.h"
 #include "Disassembler.h"
+#include "Relocations.h"
 #include <string.h>
 
 #define LOG BinaryNinja::LogInfo
@@ -1011,7 +1012,7 @@ BlackfinArchitecture::GetInstructionLowLevelIL(const uint8_t *data, uint64_t add
                             il.And(4, 
                                 il.Register(4, reginfo.fullWidthRegister), 
                                 il.ConstPointer(4, 0xffff0000)), 
-                            il.ConstPointer(2, imm), 0xffffffff)));
+                            il.ConstPointer(2, imm))));
             }
             else if (reginfo.offset == 2) { // high
                 // FIXME: This does NOT follow spec, but is here to help the VSA understand
@@ -1729,6 +1730,65 @@ public:
 
 };
 
+// TODO: This is really rudimentary, need to implement more reloc types
+class BlackfineElfRelocationHandler : public RelocationHandler {
+public:
+    virtual bool ApplyRelocation(Ref<BinaryView> view, Ref<Architecture> arch, Ref<Relocation> reloc, uint8_t* dest, size_t len) override 
+    {
+        (void) view;
+        auto info = reloc->GetInfo();
+        if (len < info.size)
+            return false;
+        uint32_t target = (uint32_t)reloc->GetTarget();
+        uint32_t* dest32 = (uint32_t*)dest;
+        uint16_t* dest16 = (uint16_t*)dest;
+
+        switch (info.nativeType) {
+        case R_BFIN_HUIMM16:
+            dest16[0] = ((target + info.addend) & 0xffff0000) >> 16;
+            break;
+        case R_BFIN_LUIMM16:
+            dest16[0] = ((target + info.addend) & 0xffff);
+            break;
+        case R_BFIN_BYTE4_DATA:
+            dest32[0] = target + info.addend;
+            break;
+        default:
+            LogInfo("Unsupported bfin relocation type: %s (%lx)", reloc_strings[info.nativeType], info.nativeType);
+            break;
+        }
+
+        return true;
+    }
+    virtual bool GetRelocationInfo(Ref<BinaryView> view, Ref<Architecture> arch, vector<BNRelocationInfo>& result) override 
+    {
+        (void)view; (void)arch;
+        set<uint64_t> relocTypes;
+        // TODO: does anything need to go in here? All we really 
+        // need is what the ELF view already gives us
+    
+        for (auto& reloc : result) {
+            reloc.type = StandardRelocationType;
+            /*
+            LogInfo("reloc.size: %lx\n", reloc.size);
+            LogInfo("reloc.address: %lx\n", reloc.address);
+            LogInfo("reloc.addend: %lx\n", reloc.addend);
+            LogInfo("reloc.nativeType: %lx\n", reloc.nativeType);
+            LogInfo("reloc.base: %lx\n", reloc.base);
+            LogInfo("reloc.baseRelative: %lx\n", reloc.baseRelative);
+            LogInfo("reloc.external: %lx\n", reloc.external);
+            LogInfo("reloc.implicitAddend: %lx\n", reloc.implicitAddend);
+            LogInfo("reloc.sectionIndex: %lx\n", reloc.sectionIndex);
+            LogInfo("reloc.target: %lx\n", reloc.target);
+            LogInfo("reloc.dataRelocation: %lx\n", reloc.dataRelocation);
+            LogInfo("reloc.symbolIndex: %lx\n", reloc.symbolIndex);
+            LogInfo(".");
+            */
+        }
+        return true;
+    }
+};
+
 extern "C" {
     BN_DECLARE_CORE_ABI_VERSION
     BINARYNINJAPLUGIN bool CorePluginInit()
@@ -1750,6 +1810,7 @@ extern "C" {
 
         bfin->RegisterRelocationHandler("bFLT File", new BlackfinBFLTRelocationHandler());
         BinaryViewType::RegisterArchitecture("ELF", 106, LittleEndian, bfin);
+        bfin->RegisterRelocationHandler("ELF", new BlackfineElfRelocationHandler());
         return true;
     }
 }
