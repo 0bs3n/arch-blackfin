@@ -1,4 +1,4 @@
-## Analog Devices Blackfin Architecture Plugin
+# Analog Devices Blackfin Architecture Plugin
 A Binary Ninja architecture plugin for the AD Blackfin architecture. It includes a standalone disassembler, and fairly robust lifting capabilities.
 
 ## Disassembler
@@ -96,22 +96,24 @@ make
     eg: binaryninja is on dev update channel and is up-to-date and binaryninja-api repo is on branch dev with latest pulled
 
 ## Known Limitations
-- No lifting support for some DSP operatations
-    - Proper handling of flags: In most cases, conditionals are evaluated based on a manually set CC flag. However in some cases, the dedicated flags (AZ, AC, etc.) are used via the CCFlag instruction -- this instruction is not currently lifted, and flags are not set by operations presently.
-    - DSP multiplication operations, with/without fractionality, with/without saturation
-    - DSP vector shift operations
-    - PACK operation
-    - ABS operation
-    - DSP "to reg from accumulator" move operations (saturation, fractionality)
-    - Accumulator/accumulator arithmetic
-    - DIVQ and DIVS division primitives
-    - ROT instruction edge cases; common cases handled by lifter
-    - Vector addition/subtraction edge cases; common cases handled by lifter
-    - EXTRACT instruction
-    - SIGNBITS instruction
-    - ALIGN8, ALIGN16, ALIGN32 instruction
-    - DSP LSHIFT operation
-- Out-of-spec handling of 16 bit immediate loads
-    - A common pattern observed in a number of sample binaries was the usage of a `reg.h = imm16; reg.l = imm16` idiom for loading a 32 bit immediate into a full width register. In most cases, the high load immediately precedes the low load, and as such the lifter combines the two operations into a single 32 bit load, which improves the resulting IL. However, in some cases the two operations are split up, and the resulting IL becomes messy, and breaks Binary Ninja's Value Set Analysis (VSA). In order to combat this, the lifter currently interprets a lone load high instruction as a 32 bit load to the full width register, assuming that the low bytes will be overwritten by a load low at some point before the register is read. This has been true in all cases observed during the development of this plugin, but _does not follow the Blackfin spec_ and technically produces incorrect IL. So far, the risk of occasional incorrect IL is outweighed by the greatly improved IL in the majority of cases, but be warned.
-- No support for parallel execution
-    - Blackfin ISA supports the parallel execution of up to three instructions at once. This is not implemented in the disassembler or lifter at present, and input machine code is treated as entirely sequential. As a consequence, under very specific circumstances the resulting disassembly may be misinterpreted -- for example, when one instruction in the parallel issued set sets a register, and the next in the set uses that same register as a source. In reality, because the instructions are being executed in parallel, the value of the register used in the latter operation will not have been updated at execution time, but the disassembly output will indicate that this _is_ the case.
+#### Incomplete Lifting
+- Proper handling of flags: In most cases, conditionals are evaluated based on a manually set CC flag. However in some cases, the dedicated flags (AZ, AC, etc.) are used via the CCFlag instruction -- this instruction is not currently lifted, and flags are not set by operations presently.
+- DSP multiplication operations, with/without fractionality, with/without saturation
+- DSP vector shift operations
+- PACK operation
+- ABS operation
+- DSP "to reg from accumulator" move operations (saturation, fractionality)
+- Accumulator/accumulator arithmetic
+- DIVQ and DIVS division primitives
+- ROT instruction edge cases; common cases handled by lifter
+- Vector addition/subtraction edge cases; common cases handled by lifter
+- EXTRACT instruction
+- SIGNBITS instruction
+- ALIGN8, ALIGN16, ALIGN32 instruction
+- DSP LSHIFT operation
+#### Out-of-spec handling of 16 bit immediate loads
+A common pattern observed in a number of sample binaries was the usage of a `reg.h = imm16; reg.l = imm16` idiom for loading a 32 bit immediate into a full width register. In most cases, the high load immediately precedes the low load, and as such the lifter combines the two operations into a single 32 bit load, which improves the resulting IL. However, in some cases the two operations are split up, and the resulting IL becomes messy, and breaks Binary Ninja's Value Set Analysis (VSA). 
+
+In order to combat this, the lifter currently interprets a lone load high instruction as a 32 bit load to the full width register, assuming that the low bytes will be overwritten by a load low at some point before the register is read. This has been true in all cases observed during the development of this plugin, but _does not follow the Blackfin spec_ and technically produces incorrect IL. So far, the risk of occasional incorrect IL is outweighed by the greatly improved IL in the majority of cases, but be warned.
+#### No support for parallel execution
+Blackfin ISA supports the parallel execution of up to three instructions at once. This is not implemented in the disassembler or lifter at present, and input machine code is treated as entirely sequential. As a consequence, under very specific circumstances the resulting disassembly may be misinterpreted -- for example, when one instruction in the parallel issued set sets a register, and the next in the set uses that same register as a source. In reality, because the instructions are being executed in parallel, the value of the register used in the latter operation will not have been updated at execution time, but the disassembly output will indicate that this _is_ the case.
