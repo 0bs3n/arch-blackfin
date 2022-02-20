@@ -3,7 +3,7 @@ A Binary Ninja architecture plugin for the AD Blackfin architecture. It includes
 
 ## Disassembler
 The disassembler used in this plugin (relagated to the disassembler/ subdirectory) can be used as a standalone decomposer/disassembler, and is not tied to the binaryninja API. It outputs tokenized structures representing each parsed machine code instruction, which can be parsed as desired by the disassembler frontend.
-| ![Disassembly](/home/sen/Projects/arch-blackfin/images/disasm.png) |
+| ![Disassembly](images/disasm.png) |
 |:--:|
 | *Yes, this is disassembly, not LLIL -- Blackfin uses arithmetic syntax for assembly* |
 ### Instruction Support
@@ -12,7 +12,7 @@ Disassembly of all instructions defined in the Blackfin Processor Programming Re
 This disassembler supports only the Blackfin ISA, and _not_ the Blackfin+ superset used on BF7xx processor models. In addition to several new instructions, the Blackfin+ ISA also features a number of additional registers, and support for and usage of 64 bit instructions. At a minimum, support for detecting 64 bit instructions is planned, which would at least allow for disassembly of Blackfin compatible instructions in a Blackfin+ image.
 
 ## Lifter
-| ![HLIL](/home/sen/Projects/arch-blackfin/images/hlil.png) |
+| ![HLIL](images/hlil.png) |
 |:--:|
 | *HLIL output example* |
 
