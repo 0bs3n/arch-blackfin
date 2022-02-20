@@ -13,9 +13,9 @@ if(NOT BN_INTERNAL_BUILD)
 endif()
 
 file(GLOB SOURCES
-    instructions/*.cpp
-	*.cpp
-	*.h)
+    disassembler/*.cpp
+    disassembler/instructions/*.cpp
+	*.cpp)
 
 if(DEMO)
 	add_library(arch_blackfin STATIC ${SOURCES})
@@ -28,7 +28,7 @@ target_compile_options(arch_blackfin PUBLIC -Wno-write-strings)
 target_include_directories(arch_blackfin
 	PRIVATE ${PROJECT_SOURCE_DIR}
     PRIVATE ${PROJECT_SOURCE_DIR}/include
-    PRIVATE ${PROJECT_SOURCE_DIR}/include/instructions)
+    PRIVATE ${PROJECT_SOURCE_DIR}/disassembler/include)
 
 target_link_libraries(arch_blackfin binaryninjaapi)
 
