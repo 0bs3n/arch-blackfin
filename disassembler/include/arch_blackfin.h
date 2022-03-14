@@ -454,10 +454,8 @@ struct InstructionOperand {
 		float immf;
 		uint64_t imm64;
 	};
-    union {
-        enum OpLiteral mnemonic;
-        enum Operator operat;
-    };
+    enum OpLiteral mnemonic;
+    enum Operator operat;
 };
 
 struct Instruction {
