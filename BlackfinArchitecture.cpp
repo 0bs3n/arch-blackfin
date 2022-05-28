@@ -233,12 +233,9 @@ size_t BlackfinArchitecture::GetFlagWriteLowLevelIL(BNLowLevelILOperation op, si
 }
 
 std::string BlackfinArchitecture::GetRegisterName(uint32_t reg) {
-    char *unkreg = (char *)malloc(0x40);
-    memset(unkreg, 0, 0x40);
     if (reg >= REG_RL0 && reg < REG_LASTREG) {
         return blackfin::get_register_name(static_cast<enum Register>(reg));
     } else {
-        // BinaryNinja::LogInfo("unknown register! reg: %d", reg);
         return "unknown";
     }
 }
@@ -766,13 +763,6 @@ BlackfinArchitecture::GetInstructionLowLevelIL(const uint8_t *data, uint64_t add
     
     len = instr_size;
     bool status = true;
-    if (this->has_loop) {
-        if (this->next_loopstart == addr) {
-            // LowLevelILLabel startLabel;
-            // il.AddInstruction(il.Goto(startLabel));
-            // il.MarkLabel(startLabel);
-        }
-    }
     switch (instr.operation) {
     case OP_NOP:
         il.AddInstruction(il.Nop());
@@ -1295,15 +1285,6 @@ BlackfinArchitecture::GetInstructionLowLevelIL(const uint8_t *data, uint64_t add
                             il.Const(1, 1))));
         }
 
-        // Display of the intrinsic is not necessary now that the loops are working
-        /*
-        il.AddInstruction(il.Intrinsic({}, BFIN_INTRINSIC_LSETUP, {
-                    il.Const(4, loopStart),
-                    il.Const(4, loopEnd),
-                    il.Register(4, loop_count_reg)
-                }));
-        */
-        
         this->il_has_loop = true;
         this->il_next_loopend = loopEnd;
         this->il_next_loopstart = loopStart;
